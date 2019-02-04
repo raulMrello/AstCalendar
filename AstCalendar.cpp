@@ -531,3 +531,5 @@ void AstCalendar::_updateConfig(const Blob::AstCalCfgData_t& cfg, Blob::ErrorDat
 _updateConfigExit:
 	strcpy(err.descr, Blob::errList[err.code]);
 }
+
+

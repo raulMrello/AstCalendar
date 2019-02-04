@@ -16,6 +16,13 @@
 #include "AstCalendarBlob.h"
 #include "RealTimeClock.h"
 
+/** Flag para habilitar el soporte de objetos JSON en las suscripciones a MQLib */
+#define ASTCAL_ENABLE_JSON_SUPPORT		1
+
+#if ASTCAL_ENABLE_JSON_SUPPORT == 1
+#include "cJSON.h"
+#endif
+
 
    
 class AstCalendar : public ActiveModule {
@@ -176,6 +183,14 @@ class AstCalendar : public ActiveModule {
 	 * @param err Recibe los errores generados durante la actualización
 	 */
 	void _updateConfig(const Blob::AstCalCfgData_t& cfg, Blob::ErrorData_t& err);
+
+
+	#if ASTCAL_ENABLE_JSON_SUPPORT == 1
+	void* _decodeSetRequest(char* topic, char* json_data, int* data_len);
+	void* _decodeGetRequest(char* json_data, int* data_len);
+	char* _encodeCfgResponse(uint32_t idtrans);
+	char* _encodeStatEvent();
+	#endif
 
 };
      
