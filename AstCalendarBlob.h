@@ -71,7 +71,9 @@ enum AstCalKeyNames{
 	AstCalKeyCfgWduStp	= (1 << 7),
 	AstCalKeyCfgRedSta	= (1 << 8),
 	AstCalKeyCfgRedStp	= (1 << 9),
-	AstCalKeyCfgSeason	= (1 << 10)
+	AstCalKeyCfgSeason	= (1 << 10),
+	//
+	AstCalKeyCfgAll     = 0x7ff,
 };
 
 
@@ -137,14 +139,6 @@ struct __packed AstCalCfgData_t{
 	AstCalEvtFlags evtFlagMask;
 	AstCalAstData_t astCfg;
 	AstCalSeason_t seasonCfg;
-	uint32_t keys;
-};
-
-
-/** Estructura de datos asociado al boot
- */
-struct __packed AstCalBootData_t{
-	AstCalCfgData_t cfg;
 };
 
 
@@ -155,6 +149,14 @@ struct __packed AstCalStatData_t{
 	uint32_t period;			// periodo de ejecución actual
 	time_t now;					// hora actual
 	AstCalAstData_t astData;	// Horas de inicio y finalización de hitos astronómicos
+};
+
+
+/** Estructura de datos asociado al boot
+ */
+struct __packed AstCalBootData_t{
+	AstCalCfgData_t cfg;
+	AstCalStatData_t stat;
 };
 
 }
