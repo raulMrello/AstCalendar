@@ -160,7 +160,62 @@ struct __packed AstCalBootData_t{
 	AstCalStatData_t stat;
 };
 
-}
+}	// end namespace Blob
+
+
+namespace JSON {
+
+/**
+ * Codifica la configuración actual en un objeto JSON astcal = {...}
+ * @param cfg Configuración
+ * @return Objeto JSON o NULL en caso de error
+ */
+cJSON* getJsonFromAstCalCfg(const Blob::AstCalCfgData_t& cfg);
+
+/**
+ * Codifica el estado actual en un objeto JSON astcal = {...}
+ * @param stat Estado
+ * @return Objeto JSON o NULL en caso de error
+ */
+cJSON* getJsonFromAstCalStat(const Blob::AstCalStatData_t& stat);
+
+/**
+ * Codifica el estado de arranque en un objeto JSON astcal = {...}
+ * @param boot Estado de arranque
+ * @return Objeto JSON o NULL en caso de error
+ */
+cJSON* getJsonFromAstCalBoot(const Blob::AstCalBootData_t& boot);
+
+
+
+/**
+ * Decodifica el mensaje JSON en un objeto de configuración
+ * @param obj Recibe el objeto decodificado
+ * @param json Objeto JSON a decodificar
+ * @return keys Parámetros decodificados o 0 en caso de error
+ */
+uint32_t getAstCalCfgFromJson(Blob::AstCalCfgData_t &obj, cJSON* json);
+
+
+/**
+ * Decodifica el mensaje JSON en un objeto de estado
+ * @param obj Recibe el objeto decodificado
+ * @param json Objeto JSON a decodificar
+ * @return keys Parámetros decodificados o 0 en caso de error
+ */
+uint32_t getAstCalStatFromJson(Blob::AstCalStatData_t &obj, cJSON* json);
+
+
+/**
+ * Decodifica el mensaje JSON en un objeto de arranque
+ * @param obj Recibe el objeto decodificado
+ * @param json Objeto JSON a decodificar
+ * @return keys Parámetros decodificados o 0 en caso de error
+ */
+uint32_t getAstCalBootFromJson(Blob::AstCalBootData_t &obj, cJSON* json);
+
+
+}	// end namespace JSON
 
 
 

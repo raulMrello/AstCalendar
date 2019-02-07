@@ -16,7 +16,7 @@
 #include "AstCalendarBlob.h"
 #include "RealTimeClock.h"
 #include "JsonParserBlob.h"
-#include <type_traits>
+
 
 /** Flag para habilitar el soporte de objetos JSON en las suscripciones a MQLib
  *  Por defecto DESACTIVADO
@@ -81,75 +81,6 @@ class AstCalendar : public ActiveModule {
     bool isJSONSupported(){
     	return _json_supported;
     }
-
-
-	/**
-	 * Codifica la configuración actual en un objeto JSON astcal = {...}
-	 * @param cfg Configuración
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-    template <typename T>
-	static cJSON* encodeObj(const T& obj){
-    	if (std::is_same<T, Blob::AstCalCfgData_t>::value){
-			return _encodeCfg(obj);
-		}
-    	if (std::is_same<T, Blob::AstCalStatData_t>::value){
-			return _encodeStat(obj);
-		}
-    	if (std::is_same<T, Blob::AstCalBootData_t>::value){
-			return _encodeBoot(obj);
-		}
-    	return NULL;
-    }
-
-
-	/**
-	 * Decodifica el mensaje JSON en un objeto
-	 * @param obj Recibe el objeto decodificado
-	 * @param json_data Objeto JSON a decodificar
-	 * @return keys Parámetros decodificados o 0 en caso de error
-	 */
-	template <typename T>
-	static uint32_t decode(T &obj, char* json_data){
-		uint32_t result = 0;
-		// decodifica objeto de configuración
-		if (std::is_same<T, Blob::AstCalCfgData_t>::value){
-			return _decodeCfg(obj, json_data);
-		}
-		// decodifica objeto de estado
-		if (std::is_same<T, Blob::AstCalStatData_t>::value){
-			return _decodeStat(obj, json_data);
-		}
-		// decodifica objeto de arranque
-		if (std::is_same<T, Blob::AstCalBootData_t>::value){
-			result = decode<Blob::AstCalCfgData_t>(obj, json_data);
-			result |= decode<Blob::AstCalStatData_t>(obj, json_data);
-			return result;
-		}
-	}
-
-	/**
-	 * Decodifica el mensaje JSON en un objeto de estado
-	 * @param stat Recibe el objeto decodificado
-	 * @param json_data Objeto JSON a decodificar
-	 * @return True si la decodificación es correcta
-	 */
-	static bool decodeStat(Blob::AstCalStatData_t &cfg, char* json_data);
-
-	/**
-	 * Decodifica una operación SetRequest en la que se adjunta la nueva configuración a aplicar
-	 * @param req Recibe el objeto decodificado
-	 * @param json_data Objeto JSON recibido
-	 * @return True si la decodificación es correcta
-	 */
-	static bool decodeSetRequest(Blob::SetRequest_t<Blob::AstCalCfgData_t>&req, char* json_data);
-
-	/**
-	 * Codifica la configuración actual en un objeto JSON solicitado previamente con un idtrans
-	 * @param resp Respuesta con la configuración actual
-	 * @return Objeto JSON
-	 */
-	static cJSON* encodeCfgResponse(const Blob::Response_t<Blob::AstCalCfgData_t> &resp);
 
 
   private:
@@ -274,54 +205,6 @@ class AstCalendar : public ActiveModule {
 	 * @param err Recibe los errores generados durante la actualización
 	 */
 	void _updateConfig(const Blob::AstCalCfgData_t& cfg, uint32_t keys, Blob::ErrorData_t& err);
-
-	/**
-	 * Codifica la configuración actual en un objeto JSON astcal = {...}
-	 * @param cfg Configuración
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	static cJSON* _encodeCfg(const Blob::AstCalCfgData_t& cfg);
-
-	/**
-	 * Codifica el estado actual en un objeto JSON astcal = {...}
-	 * @param stat Estado
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	static cJSON* _encodeStat(const Blob::AstCalStatData_t& stat);
-
-	/**
-	 * Codifica el estado de arranque en un objeto JSON astcal = {...}
-	 * @param boot Estado de arranque
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	static cJSON* _encodeBoot(const Blob::AstCalBootData_t& boot);
-
-
-	/**
-	 * Decodifica el mensaje JSON en un objeto de configuración
-	 * @param obj Recibe el objeto decodificado
-	 * @param json_data Objeto JSON a decodificar
-	 * @return keys Parámetros decodificados o 0 en caso de error
-	 */
-	static uint32_t _decodeCfg(Blob::AstCalCfgData_t &obj, char* json_data);
-
-
-	/**
-	 * Decodifica el mensaje JSON en un objeto de estado
-	 * @param obj Recibe el objeto decodificado
-	 * @param json_data Objeto JSON a decodificar
-	 * @return keys Parámetros decodificados o 0 en caso de error
-	 */
-	static uint32_t _decodeStat(Blob::AstCalStatData_t &obj, char* json_data);
-
-
-	/**
-	 * Decodifica el mensaje JSON en un objeto de arranque
-	 * @param obj Recibe el objeto decodificado
-	 * @param json_data Objeto JSON a decodificar
-	 * @return keys Parámetros decodificados o 0 en caso de error
-	 */
-	static uint32_t _decodeBoot(Blob::AstCalBootData_t &obj, char* json_data);
 
 };
      
