@@ -644,6 +644,7 @@ static const char* p_astcal 		= "astcal";
 static const char* p_astCfg 		= "astCfg";
 static const char* p_astData 		= "astData";
 static const char* p_code	 		= "code";
+static const char* p_cfg	 		= "cfg";
 static const char* p_descr	 		= "descr";
 static const char* p_error	 		= "error";
 static const char* p_evtFlags 		= "evtFlags";
@@ -658,6 +659,7 @@ static const char* p_period 		= "period";
 static const char* p_reductionStart = "reductionStart";
 static const char* p_reductionStop	= "reductionStop";
 static const char* p_seasonCfg 		= "seasonCfg";
+static const char* p_stat 			= "stat";
 static const char* p_timestamp		= "timestamp";
 static const char* p_updFlags 		= "updFlags";
 static const char* p_wdowDawnStart 	= "wdowDawnStart";
@@ -762,57 +764,12 @@ bool AstCalendar::decodeSetRequest(Blob::SetRequest_t<Blob::AstCalCfgData_t>&req
 		goto __decode_null_exitAstCalCfg;
 	}
 
-	if((obj = cJSON_GetObjectItem(astcal,p_updFlags)) != NULL){
-		req.data.updFlagMask = (Blob::AstCalUpdFlags)obj->valueint;
-		req.keys |= Blob::AstCalKeyCfgUpd;
-	}
-	if((obj = cJSON_GetObjectItem(astcal,p_evtFlags)) != NULL){
-		req.data.evtFlagMask = (Blob::AstCalEvtFlags)obj->valueint;
-		req.keys |= Blob::AstCalKeyCfgEvt;
-	}
-	if((obj = cJSON_GetObjectItem(astcal, p_seasonCfg)) != NULL){
-		char* seas_cfg = obj->valuestring;
-		if(!seas_cfg || strlen(seas_cfg) >= Blob::LengthOfSeasonEnvText){
-			req._error.code = Blob::ErrSeasonCfgFormat;
-			goto __decode_null_exitAstCalCfg;
-		}
-		strcpy(req.data.seasonCfg.envText, seas_cfg);
-		req.keys |= Blob::AstCalKeyCfgSeason;
-	}
-
-	if((astcfg = cJSON_GetObjectItem(astcal, p_astCfg)) != NULL){
-		if((obj = cJSON_GetObjectItem(astcfg, p_latitude)) != NULL){
-			req.data.astCfg.latitude = obj->valueint;
-			req.keys |= Blob::AstCalKeyCfgLat;
-		}
-		if((obj = cJSON_GetObjectItem(astcfg, p_longitude)) != NULL){
-			req.data.astCfg.longitude = obj->valueint;
-			req.keys |= Blob::AstCalKeyCfgLon;
-		}
-		if((obj = cJSON_GetObjectItem(astcfg, p_wdowDawnStart)) != NULL){
-			req.data.astCfg.wdowDawnStart = obj->valueint;
-			req.keys |= Blob::AstCalKeyCfgWdaSta;
-		}
-		if((obj = cJSON_GetObjectItem(astcfg, p_wdowDawnStop)) != NULL){
-			req.data.astCfg.wdowDawnStop = obj->valueint;
-			req.keys |= Blob::AstCalKeyCfgWdaStp;
-		}
-		if((obj = cJSON_GetObjectItem(astcfg, p_wdowDuskStart)) != NULL){
-			req.data.astCfg.wdowDuskStart = obj->valueint;
-			req.keys |= Blob::AstCalKeyCfgWduSta;
-		}
-		if((obj = cJSON_GetObjectItem(astcfg, p_wdowDuskStop)) != NULL){
-			req.data.astCfg.wdowDuskStop = obj->valueint;
-			req.keys |= Blob::AstCalKeyCfgWduStp;
-		}
-		if((obj = cJSON_GetObjectItem(astcfg, p_reductionStart)) != NULL){
-			req.data.astCfg.reductionStart = obj->valueint;
-			req.keys |= Blob::AstCalKeyCfgRedSta;
-		}
-		if((obj = cJSON_GetObjectItem(astcfg, p_reductionStop)) != NULL){
-			req.data.astCfg.reductionStop = obj->valueint;
-			req.keys |= Blob::AstCalKeyCfgRedStp;
-		}
+	char* astcal_json = cJSON_Print(astcal);
+	MBED_ASSERT(astcal_json);
+	uint32_t astcal_keys = _decodeCfg(req.data, astcal_json);
+	Heap::memFree(astcal_json);
+	if(!astcal_keys){
+		req._error.code = Blob::ErrJsonMalformed;
 	}
 
 __decode_null_exitAstCalCfg:
@@ -906,4 +863,159 @@ __encodeBoot_Err:
 	return NULL;
 }
 
+
+//------------------------------------------------------------------------------------
+uint32_t AstCalendar::_decodeCfg(Blob::AstCalCfgData_t &cfg, char* json_data){
+	cJSON* astcal = NULL;
+	cJSON* astcfg = NULL;
+	cJSON* obj = NULL;
+	uint32_t keys = 0;
+
+	if((astcal = cJSON_Parse(json_data)) == NULL){
+		return 0;
+	}
+
+	if((obj = cJSON_GetObjectItem(astcal,p_updFlags)) != NULL){
+		cfg.updFlagMask = (Blob::AstCalUpdFlags)obj->valueint;
+		keys |= Blob::AstCalKeyCfgUpd;
+	}
+	if((obj = cJSON_GetObjectItem(astcal,p_evtFlags)) != NULL){
+		cfg.evtFlagMask = (Blob::AstCalEvtFlags)obj->valueint;
+		keys |= Blob::AstCalKeyCfgEvt;
+	}
+	if((obj = cJSON_GetObjectItem(astcal, p_seasonCfg)) != NULL){
+		char* seas_cfg = obj->valuestring;
+		if(seas_cfg && strlen(seas_cfg) < Blob::LengthOfSeasonEnvText){
+			strcpy(cfg.seasonCfg.envText, seas_cfg);
+			keys |= Blob::AstCalKeyCfgSeason;
+		}
+	}
+
+	if((astcfg = cJSON_GetObjectItem(astcal, p_astCfg)) != NULL){
+		if((obj = cJSON_GetObjectItem(astcfg, p_latitude)) != NULL){
+			cfg.astCfg.latitude = obj->valueint;
+			keys |= Blob::AstCalKeyCfgLat;
+		}
+		if((obj = cJSON_GetObjectItem(astcfg, p_longitude)) != NULL){
+			cfg.astCfg.longitude = obj->valueint;
+			keys |= Blob::AstCalKeyCfgLon;
+		}
+		if((obj = cJSON_GetObjectItem(astcfg, p_wdowDawnStart)) != NULL){
+			cfg.astCfg.wdowDawnStart = obj->valueint;
+			keys |= Blob::AstCalKeyCfgWdaSta;
+		}
+		if((obj = cJSON_GetObjectItem(astcfg, p_wdowDawnStop)) != NULL){
+			cfg.astCfg.wdowDawnStop = obj->valueint;
+			keys |= Blob::AstCalKeyCfgWdaStp;
+		}
+		if((obj = cJSON_GetObjectItem(astcfg, p_wdowDuskStart)) != NULL){
+			cfg.astCfg.wdowDuskStart = obj->valueint;
+			keys |= Blob::AstCalKeyCfgWduSta;
+		}
+		if((obj = cJSON_GetObjectItem(astcfg, p_wdowDuskStop)) != NULL){
+			cfg.astCfg.wdowDuskStop = obj->valueint;
+			keys |= Blob::AstCalKeyCfgWduStp;
+		}
+		if((obj = cJSON_GetObjectItem(astcfg, p_reductionStart)) != NULL){
+			cfg.astCfg.reductionStart = obj->valueint;
+			keys |= Blob::AstCalKeyCfgRedSta;
+		}
+		if((obj = cJSON_GetObjectItem(astcfg, p_reductionStop)) != NULL){
+			cfg.astCfg.reductionStop = obj->valueint;
+			keys |= Blob::AstCalKeyCfgRedStp;
+		}
+	}
+	cJSON_Delete(astcal);
+	return keys;
+}
+
+
+//------------------------------------------------------------------------------------
+uint32_t AstCalendar::_decodeStat(Blob::AstCalStatData_t &stat, char* json_data){
+	cJSON* astcal = NULL;
+	cJSON* astData = NULL;
+	cJSON* obj = NULL;
+	uint32_t keys = 0;
+
+	if((astcal = cJSON_Parse(json_data)) == NULL){
+		return 0;
+	}
+
+	if((obj = cJSON_GetObjectItem(astcal,p_flags)) != NULL){
+		stat.flags = obj->valueint;
+		keys |= Blob::AstCalKeyAny;
+	}
+	if((obj = cJSON_GetObjectItem(astcal,p_period)) != NULL){
+		stat.period = obj->valueint;
+		keys |= Blob::AstCalKeyAny;
+	}
+	if((obj = cJSON_GetObjectItem(astcal, p_now)) != NULL){
+		stat.now = (time_t)obj->valuedouble;
+		keys |= Blob::AstCalKeyAny;
+	}
+
+	if((astData = cJSON_GetObjectItem(astcal, p_astData)) != NULL){
+		if((obj = cJSON_GetObjectItem(astData, p_latitude)) != NULL){
+			stat.astData.latitude = obj->valueint;
+			keys |= Blob::AstCalKeyAny;
+		}
+		if((obj = cJSON_GetObjectItem(astData, p_longitude)) != NULL){
+			stat.astData.longitude = obj->valueint;
+			keys |= Blob::AstCalKeyAny;
+		}
+		if((obj = cJSON_GetObjectItem(astData, p_wdowDawnStart)) != NULL){
+			stat.astData.wdowDawnStart = obj->valueint;
+			keys |= Blob::AstCalKeyAny;
+		}
+		if((obj = cJSON_GetObjectItem(astData, p_wdowDawnStop)) != NULL){
+			stat.astData.wdowDawnStop = obj->valueint;
+			keys |= Blob::AstCalKeyAny;
+		}
+		if((obj = cJSON_GetObjectItem(astData, p_wdowDuskStart)) != NULL){
+			stat.astData.wdowDuskStart = obj->valueint;
+			keys |= Blob::AstCalKeyAny;
+		}
+		if((obj = cJSON_GetObjectItem(astData, p_wdowDuskStop)) != NULL){
+			stat.astData.wdowDuskStop = obj->valueint;
+			keys |= Blob::AstCalKeyAny;
+		}
+		if((obj = cJSON_GetObjectItem(astData, p_reductionStart)) != NULL){
+			stat.astData.reductionStart = obj->valueint;
+			keys |= Blob::AstCalKeyAny;
+		}
+		if((obj = cJSON_GetObjectItem(astData, p_reductionStop)) != NULL){
+			stat.astData.reductionStop = obj->valueint;
+			keys |= Blob::AstCalKeyAny;
+		}
+	}
+	cJSON_Delete(astcal);
+	return keys;
+}
+
+
+//------------------------------------------------------------------------------------
+uint32_t AstCalendar::_decodeBoot(Blob::AstCalBootData_t &obj, char* json_data){
+	cJSON* astcal = NULL;
+	cJSON* cfg = NULL;
+	cJSON* stat = NULL;
+	uint32_t keys = 0;
+
+	if((astcal = cJSON_Parse(json_data)) == NULL){
+		return 0;
+	}
+	if((cfg = cJSON_GetObjectItem(astcal, p_cfg)) != NULL){
+		char* cfg_json = cJSON_Print(cfg);
+		MBED_ASSERT(cfg_json);
+		keys |= _decodeCfg(obj.cfg, cfg_json);
+		Heap::memFree(cfg_json);
+	}
+	if((stat = cJSON_GetObjectItem(astcal, p_stat)) != NULL){
+		char* stat_json = cJSON_Print(stat);
+		MBED_ASSERT(stat_json);
+		keys |= _decodeStat(obj.stat, stat_json);
+		Heap::memFree(stat_json);
+	}
+	cJSON_Delete(astcal);
+	return keys;
+}
 

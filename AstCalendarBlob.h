@@ -73,6 +73,7 @@ enum AstCalKeyNames{
 	AstCalKeyCfgRedStp	= (1 << 9),
 	AstCalKeyCfgSeason	= (1 << 10),
 	//
+	AstCalKeyAny		= (1 << 31),
 	AstCalKeyCfgAll     = 0x7ff,
 };
 
