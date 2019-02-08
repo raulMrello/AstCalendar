@@ -166,21 +166,21 @@ struct __packed AstCalBootData_t{
 namespace JSON {
 
 /**
- * Codifica la configuración actual en un objeto JSON astcal = {...}
+ * Codifica la configuración actual en un objeto JSON
  * @param cfg Configuración
  * @return Objeto JSON o NULL en caso de error
  */
 cJSON* getJsonFromAstCalCfg(const Blob::AstCalCfgData_t& cfg);
 
 /**
- * Codifica el estado actual en un objeto JSON astcal = {...}
+ * Codifica el estado actual en un objeto JSON
  * @param stat Estado
  * @return Objeto JSON o NULL en caso de error
  */
 cJSON* getJsonFromAstCalStat(const Blob::AstCalStatData_t& stat);
 
 /**
- * Codifica el estado de arranque en un objeto JSON astcal = {...}
+ * Codifica el estado de arranque en un objeto JSON
  * @param boot Estado de arranque
  * @return Objeto JSON o NULL en caso de error
  */

@@ -108,7 +108,7 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
 	// solicita la configuración mediante un GetRequest
 	Blob::GetRequest_t* greq = new Blob::GetRequest_t(1);
 	TEST_ASSERT_NOT_NULL(greq);
-	cJSON* jreq = JSON::parseGetRequest(*greq);
+	cJSON* jreq = JsonParser::getJsonFromObj(*greq);
 	TEST_ASSERT_NOT_NULL(jreq);
 	msg = cJSON_Print(jreq);
 	TEST_ASSERT_NOT_NULL(msg);
@@ -133,22 +133,21 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
 	s_test_done = false;
 
 	// actualiza la configuración mediante un SetRequest
-	Blob::AstCalCfgData_t cfg;
-	cfg.updFlagMask = Blob::EnableAstCalCfgUpdNotif;
-	cfg.evtFlagMask = Blob::AstCalMinEvt;
-	cfg.astCfg.latitude = 40;
-	cfg.astCfg.longitude = -3;
-	cfg.astCfg.wdowDawnStart = -60;
-	cfg.astCfg.wdowDawnStop = 60;
-	cfg.astCfg.wdowDuskStart = -120;
-	cfg.astCfg.wdowDuskStop = 120;
-	cfg.astCfg.reductionStart = 100;
-	cfg.astCfg.reductionStop = 200;
-	strcpy(cfg.seasonCfg.envText, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
+	Blob::SetRequest_t<Blob::AstCalCfgData_t> req;
+	req.idTrans = 2;
+	req.data.updFlagMask = Blob::EnableAstCalCfgUpdNotif;
+	req.data.evtFlagMask = Blob::AstCalMinEvt;
+	req.data.astCfg.latitude = 40;
+	req.data.astCfg.longitude = -3;
+	req.data.astCfg.wdowDawnStart = -60;
+	req.data.astCfg.wdowDawnStop = 60;
+	req.data.astCfg.wdowDuskStart = -120;
+	req.data.astCfg.wdowDuskStop = 120;
+	req.data.astCfg.reductionStart = 100;
+	req.data.astCfg.reductionStop = 200;
+	strcpy(req.data.seasonCfg.envText, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
 
-	cJSON* astcal = AstCalendar::encodeCfg(cfg);
-	TEST_ASSERT_NOT_NULL(astcal);
-	jreq = JSON::parseSetRequest(2, "astcal", astcal, Blob::AstCalKeyCfgAll);
+	jreq = JsonParser::getJsonFromSetRequest(reqJsonParser::p_data);
 	TEST_ASSERT_NOT_NULL(jreq);
 	msg = cJSON_Print(jreq);
 	TEST_ASSERT_NOT_NULL(msg);
@@ -286,7 +285,7 @@ static void subscriptionCb(const char* topic, void* msg, uint16_t msg_len){
 		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Formando objeto JSON a partir de objeto Blob...");
 		if(MQ::MQClient::isTokenRoot(topic, "stat/cfg")){
 			if(msg_len == sizeof(Blob::Response_t<Blob::AstCalCfgData_t>)){
-				cJSON* obj = AstCalendar::encodeCfgResponse(*((Blob::Response_t<Blob::AstCalCfgData_t>*)msg));
+				cJSON* obj = JsonParser::getJsonFromResponse(*((Blob::Response_t<Blob::AstCalCfgData_t>*)msg));
 				if(obj){
 					char* sobj = cJSON_Print(obj);
 					cJSON_Delete(obj);
@@ -307,7 +306,7 @@ static void subscriptionCb(const char* topic, void* msg, uint16_t msg_len){
 		}
 		else if(MQ::MQClient::isTokenRoot(topic, "stat/value")){
 			if(msg_len == sizeof(Blob::AstCalStatData_t)){
-				cJSON* obj = AstCalendar::encodeStat(*((Blob::AstCalStatData_t*)msg));
+				cJSON* obj = JsonParser::getJsonFromObj(*((Blob::AstCalStatData_t*)msg));
 				if(obj){
 					char* sobj = cJSON_Print(obj);
 					cJSON_Delete(obj);
@@ -319,7 +318,7 @@ static void subscriptionCb(const char* topic, void* msg, uint16_t msg_len){
 		else if(MQ::MQClient::isTokenRoot(topic, "stat/boot")){
 			if(msg_len == sizeof(Blob::AstCalBootData_t)){
 				Blob::AstCalBootData_t* boot = (Blob::AstCalBootData_t*)msg;
-				cJSON* obj = AstCalendar::encodeBoot(*((Blob::AstCalBootData_t*)msg));
+				cJSON* obj = JsonParser::getJsonFromObj(*((Blob::AstCalBootData_t*)msg));
 				if(obj){
 					char* sobj = cJSON_Print(obj);
 					cJSON_Delete(obj);

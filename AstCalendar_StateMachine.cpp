@@ -68,7 +68,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				Blob::Response_t<Blob::AstCalCfgData_t>* resp = new Blob::Response_t<Blob::AstCalCfgData_t>(req->idTrans, req->_error, _astdata.cfg);
 
 				if(_json_supported){
-					cJSON* jresp = JSON::getJsonFromResponse(*resp);
+					cJSON* jresp = JsonParser::getJsonFromResponse(*resp);
 					if(jresp){
 						char* jmsg = cJSON_Print(jresp);
 						cJSON_Delete(jresp);
@@ -99,7 +99,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				Blob::Response_t<Blob::AstCalCfgData_t>* resp = new Blob::Response_t<Blob::AstCalCfgData_t>(req->idTrans, req->_error, _astdata.cfg);
 
 				if(_json_supported){
-					cJSON* jresp = JSON::getJsonFromResponse(*resp);
+					cJSON* jresp = JsonParser::getJsonFromResponse(*resp);
 					if(jresp){
 						char* jmsg = cJSON_Print(jresp);
 						cJSON_Delete(jresp);
@@ -131,7 +131,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			Blob::Response_t<Blob::AstCalCfgData_t>* resp = new Blob::Response_t<Blob::AstCalCfgData_t>(req->idTrans, req->_error, _astdata.cfg);
 
 			if(_json_supported){
-				cJSON* jresp = JSON::getJsonFromResponse(*resp);
+				cJSON* jresp = JsonParser::getJsonFromResponse(*resp);
 				if(jresp){
 					char* jmsg = cJSON_Print(jresp);
 					cJSON_Delete(jresp);
@@ -158,7 +158,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			sprintf(pub_topic, "stat/boot/%s", _pub_topic_base);
 
 			if(_json_supported){
-				cJSON* jboot = JSON::getJsonFromObj(_astdata);
+				cJSON* jboot = JsonParser::getJsonFromObj(_astdata);
 				if(jboot){
 					char* jmsg = cJSON_Print(jboot);
 					cJSON_Delete(jboot);

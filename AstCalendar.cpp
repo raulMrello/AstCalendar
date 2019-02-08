@@ -121,7 +121,7 @@ void AstCalendar::eventSimulatorCb() {
 		sprintf(pub_topic, "stat/value/%s", _pub_topic_base);
 
 		if(_json_supported){
-			cJSON* jstat = JSON::getJsonFromObj(stat);
+			cJSON* jstat = JsonParser::getJsonFromObj(stat);
 			if(jstat){
 				char* jmsg = cJSON_Print(jstat);
 				cJSON_Delete(jstat);
