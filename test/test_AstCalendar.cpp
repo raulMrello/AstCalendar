@@ -147,7 +147,7 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
 	req.data.astCfg.reductionStop = 200;
 	strcpy(req.data.seasonCfg.envText, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
 
-	jreq = JsonParser::getJsonFromSetRequest(reqJsonParser::p_data);
+	jreq = JsonParser::getJsonFromSetRequest(req, JsonParser::p_data);
 	TEST_ASSERT_NOT_NULL(jreq);
 	msg = cJSON_Print(jreq);
 	TEST_ASSERT_NOT_NULL(msg);
@@ -294,7 +294,7 @@ static void subscriptionCb(const char* topic, void* msg, uint16_t msg_len){
 				}
 			}
 			else if(msg_len == sizeof(Blob::AstCalCfgData_t)){
-				cJSON* obj = AstCalendar::encodeCfg(*((Blob::AstCalCfgData_t*)msg));
+				cJSON* obj = JsonParser::getJsonFromObj(*((Blob::AstCalCfgData_t*)msg));
 				if(obj){
 					char* sobj = cJSON_Print(obj);
 					cJSON_Delete(obj);
