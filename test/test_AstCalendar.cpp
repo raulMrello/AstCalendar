@@ -114,6 +114,7 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
 	TEST_ASSERT_NOT_NULL(msg);
 	cJSON_Delete(jreq);
 	delete(greq);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Request:\r\nto:get/cfg/astcal\r\nmsg:%s", msg);
 
 	res = MQ::MQClient::publish("get/cfg/astcal", msg, strlen(msg)+1, &s_published_cb);
 	TEST_ASSERT_EQUAL(res, MQ::SUCCESS);
@@ -133,12 +134,12 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
 	s_test_done = false;
 
 	// actualiza la configuración mediante un SetRequest
-	Blob::SetRequest_t<Blob::AstCalCfgData_t> req;
+	Blob::SetRequest_t<Blob::AstCalCfgData_t> req = {0};
 	req.idTrans = 2;
 	req.data.updFlagMask = Blob::EnableAstCalCfgUpdNotif;
 	req.data.evtFlagMask = Blob::AstCalMinEvt;
-	req.data.astCfg.latitude = 40;
-	req.data.astCfg.longitude = -3;
+	req.data.astCfg.latitude = 40.0;
+	req.data.astCfg.longitude = -3.0;
 	req.data.astCfg.wdowDawnStart = -60;
 	req.data.astCfg.wdowDawnStop = 60;
 	req.data.astCfg.wdowDuskStart = -120;
@@ -152,6 +153,7 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
 	msg = cJSON_Print(jreq);
 	TEST_ASSERT_NOT_NULL(msg);
 	cJSON_Delete(jreq);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Request:\r\nto:set/cfg/astcal\r\nmsg:%s", msg);
 
 	res = MQ::MQClient::publish("set/cfg/astcal", msg, strlen(msg)+1, &s_published_cb);
 	TEST_ASSERT_EQUAL(res, MQ::SUCCESS);
@@ -233,8 +235,8 @@ TEST_CASE("Blob support .........................", "[AstCalendar]"){
 	sreq._error.descr[0] = 0;
 	sreq.data.updFlagMask = Blob::EnableAstCalCfgUpdNotif;
 	sreq.data.evtFlagMask = Blob::AstCalMinEvt;
-	sreq.data.astCfg.latitude = 40;
-	sreq.data.astCfg.longitude = -3;
+	sreq.data.astCfg.latitude = 40.0;
+	sreq.data.astCfg.longitude = -3.0;
 	sreq.data.astCfg.wdowDawnStart = -60;
 	sreq.data.astCfg.wdowDawnStop = 60;
 	sreq.data.astCfg.wdowDuskStart = -120;

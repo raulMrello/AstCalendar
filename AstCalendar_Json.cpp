@@ -24,6 +24,8 @@ namespace JSON{
 cJSON* getJsonFromAstCalCfg(const Blob::AstCalCfgData_t& cfg){
 	cJSON* astcal = NULL;
 	cJSON* value = NULL;
+	cJSON* array = NULL;
+	cJSON* item = NULL;
 
 	if((astcal=cJSON_CreateObject()) == NULL){
 		return NULL;
@@ -46,13 +48,32 @@ cJSON* getJsonFromAstCalCfg(const Blob::AstCalCfgData_t& cfg){
 	cJSON_AddNumberToObject(value, JsonParser::p_wdowDuskStop, cfg.astCfg.wdowDuskStop);
 	cJSON_AddNumberToObject(value, JsonParser::p_reductionStart, cfg.astCfg.reductionStart);
 	cJSON_AddNumberToObject(value, JsonParser::p_reductionStop, cfg.astCfg.reductionStop);
-	cJSON_AddItemToObject(astcal, JsonParser::p_astCfg, value);
+	cJSON_AddItemToObject(astcal, JsonParser::p_ast, value);
 	// key: seasonCfg
 	if((value=cJSON_CreateString(cfg.seasonCfg.envText)) == NULL){
 		cJSON_Delete(astcal);
 		return NULL;
 	}
 	cJSON_AddItemToObject(astcal, JsonParser::p_seasonCfg, value);
+
+	// key: periods
+	if((array=cJSON_CreateArray()) == NULL){
+		cJSON_Delete(astcal);
+		return NULL;
+	}
+	for(int i=0; i < Blob::AstCalMaxPeriodCount; i++){
+		if((item=cJSON_CreateObject()) == NULL){
+			cJSON_Delete(array);
+			cJSON_Delete(astcal);
+			return NULL;
+		}
+		cJSON_AddNumberToObject(item, JsonParser::p_since, cfg.periods[i].since);
+		cJSON_AddNumberToObject(item, JsonParser::p_until, cfg.periods[i].until);
+		cJSON_AddBoolToObject(item, JsonParser::p_enabled, cfg.periods[i].enabled);
+		cJSON_AddItemToArray(array, item);
+	}
+	cJSON_AddItemToObject(astcal, JsonParser::p_periods, array);
+
 	return astcal;
 }
 
@@ -81,7 +102,7 @@ cJSON* getJsonFromAstCalStat(const Blob::AstCalStatData_t& stat){
 	cJSON_AddNumberToObject(astData, JsonParser::p_wdowDuskStop, stat.astData.wdowDuskStop);
 	cJSON_AddNumberToObject(astData, JsonParser::p_reductionStart, stat.astData.reductionStart);
 	cJSON_AddNumberToObject(astData, JsonParser::p_reductionStop, stat.astData.reductionStop);
-	cJSON_AddItemToObject(astcal, JsonParser::p_astData, astData);
+	cJSON_AddItemToObject(astcal, JsonParser::p_ast, astData);
 	return astcal;
 }
 
@@ -97,12 +118,12 @@ cJSON* getJsonFromAstCalBoot(const Blob::AstCalBootData_t& boot){
 	if((item = getJsonFromAstCalCfg(boot.cfg)) == NULL){
 		goto __encodeBoot_Err;
 	}
-	cJSON_AddItemToObject(astcal, JsonParser::p_astCfg, item);
+	cJSON_AddItemToObject(astcal, JsonParser::p_cfg, item);
 
 	if((item = getJsonFromAstCalStat(boot.stat)) == NULL){
 		goto __encodeBoot_Err;
 	}
-	cJSON_AddItemToObject(astcal, JsonParser::p_astData, item);
+	cJSON_AddItemToObject(astcal, JsonParser::p_stat, item);
 	return astcal;
 
 __encodeBoot_Err:
@@ -114,6 +135,7 @@ __encodeBoot_Err:
 uint32_t getAstCalCfgFromJson(Blob::AstCalCfgData_t &cfg, cJSON* json){
 	cJSON* astcfg = NULL;
 	cJSON* obj = NULL;
+	cJSON* array = NULL;
 	uint32_t keys = 0;
 
 	if(json == NULL){
@@ -136,13 +158,13 @@ uint32_t getAstCalCfgFromJson(Blob::AstCalCfgData_t &cfg, cJSON* json){
 		}
 	}
 
-	if((astcfg = cJSON_GetObjectItem(json, JsonParser::p_astCfg)) != NULL){
+	if((astcfg = cJSON_GetObjectItem(json, JsonParser::p_ast)) != NULL){
 		if((obj = cJSON_GetObjectItem(astcfg, JsonParser::p_latitude)) != NULL){
-			cfg.astCfg.latitude = obj->valueint;
+			cfg.astCfg.latitude = obj->valuedouble;
 			keys |= Blob::AstCalKeyCfgLat;
 		}
 		if((obj = cJSON_GetObjectItem(json, JsonParser::p_longitude)) != NULL){
-			cfg.astCfg.longitude = obj->valueint;
+			cfg.astCfg.longitude = obj->valuedouble;
 			keys |= Blob::AstCalKeyCfgLon;
 		}
 		if((obj = cJSON_GetObjectItem(json, JsonParser::p_wdowDawnStart)) != NULL){
@@ -168,6 +190,35 @@ uint32_t getAstCalCfgFromJson(Blob::AstCalCfgData_t &cfg, cJSON* json){
 		if((obj = cJSON_GetObjectItem(json, JsonParser::p_reductionStop)) != NULL){
 			cfg.astCfg.reductionStop = obj->valueint;
 			keys |= Blob::AstCalKeyCfgRedStp;
+		}
+	}
+
+	if((array = cJSON_GetObjectItem(json, JsonParser::p_periods)) != NULL){
+		if(cJSON_GetArraySize(array) <= Blob::AstCalMaxPeriodCount){
+			int items = 0;
+			for(int i=0;i<cJSON_GetArraySize(array);i++){
+				cJSON* value = NULL;
+				if((obj = cJSON_GetArrayItem(array, i)) != NULL){
+					int params = 0;
+					if((value = cJSON_GetObjectItem(obj, JsonParser::p_since)) != NULL){
+						cfg.periods[i].since = (time_t)value->valuedouble;
+						params++;
+					}
+					if((value = cJSON_GetObjectItem(obj, JsonParser::p_until)) != NULL){
+						cfg.periods[i].until = (time_t)value->valuedouble;
+						params++;
+					}
+					if((value = cJSON_GetObjectItem(obj, JsonParser::p_enabled)) != NULL){
+						cfg.periods[i].enabled = (bool)value->valueint;
+						params++;
+					}
+					if(params == 3)
+						items++;
+				}
+			}
+			if (items==cJSON_GetArraySize(array)){
+				keys |= Blob::AstCalKeyCfgPeriods;
+			}
 		}
 	}
 	return keys;
@@ -197,7 +248,7 @@ uint32_t getAstCalStatFromJson(Blob::AstCalStatData_t &stat, cJSON* json){
 		keys |= Blob::AstCalKeyAny;
 	}
 
-	if((astData = cJSON_GetObjectItem(json, JsonParser::p_astData)) != NULL){
+	if((astData = cJSON_GetObjectItem(json, JsonParser::p_ast)) != NULL){
 		if((obj = cJSON_GetObjectItem(astData, JsonParser::p_latitude)) != NULL){
 			stat.astData.latitude = obj->valueint;
 			keys |= Blob::AstCalKeyAny;

@@ -156,6 +156,11 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 			MBED_ASSERT(pub_topic);
 			sprintf(pub_topic, "stat/boot/%s", _pub_topic_base);
+			_astdata.stat.flags = Blob::AstCalNoEvents;
+			_astdata.stat.now = time(NULL);
+			_astdata.stat.period = 0;
+			// clono la configuración en la variable de estado a devolver
+			_astdata.stat.astData = _astdata.cfg.astCfg;
 
 			if(_json_supported){
 				cJSON* jboot = JsonParser::getJsonFromObj(_astdata);

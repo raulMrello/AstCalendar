@@ -115,10 +115,13 @@ void AstCalendar::eventSimulatorCb() {
 		Blob::AstCalStatData_t stat;
 		stat.flags = flags;
 		stat.now = t;
+#warning TODO: @@@--- Implementar periodo activo ---@@@
 		stat.period=0;
 		char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 		MBED_ASSERT(pub_topic);
 		sprintf(pub_topic, "stat/value/%s", _pub_topic_base);
+		// clono la configuración en la variable de estado a devolver
+		stat.astData = _astdata.cfg.astCfg;
 
 		if(_json_supported){
 			cJSON* jstat = JsonParser::getJsonFromObj(stat);

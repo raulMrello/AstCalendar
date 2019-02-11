@@ -29,6 +29,12 @@ bool AstCalendar::checkIntegrity(){
 	   _astdata.cfg.astCfg.wdowDuskStart > Blob::TimestampMinutesDayLimit || _astdata.cfg.astCfg.wdowDuskStop > Blob::TimestampMinutesDayLimit){
 		return false;
 	}
+	// verifico periodos activos sin rangos establecidos
+	for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
+		if((_astdata.cfg.periods[i].since == 0 || _astdata.cfg.periods[i].until == 0) && _astdata.cfg.periods[i].enabled){
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -39,9 +45,15 @@ void AstCalendar::setDefaultConfig(){
 	_astdata.cfg.updFlagMask = (Blob::AstCalUpdFlags)(Blob::EnableAstCalCfgUpdNotif);
 	_astdata.cfg.evtFlagMask = (Blob::AstCalEvtFlags)(Blob::AstCalIVEvt | Blob::AstCalVIEvt | Blob::AstCalDayEvt | Blob::AstCalDawnEvt | Blob::AstCalDuskEvt | Blob::AstCalHourEvt | Blob::AstCalMinEvt | Blob::AstCalSecEvt);
 	// desactiva toda la configuración astronómica y establece Madrid como localización por defecto
-	_astdata.cfg.astCfg = {40416500, -3702560, 0, 0, 0, 0, 0, 0};
+	_astdata.cfg.astCfg = {40.416500, -3.702560, 0, 0, 0, 0, 0, 0};
 	// establece cambio horario por defecto de la zona UE
 	strcpy(_astdata.cfg.seasonCfg.envText, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
+	// desactiva todos los periodos
+	for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
+		_astdata.cfg.periods[i].since = 0;
+		_astdata.cfg.periods[i].until = 0;
+		_astdata.cfg.periods[i].enabled = false;
+	}
 	saveConfig();
 }
 
@@ -66,6 +78,13 @@ void AstCalendar::restoreConfig(){
 	if(!restoreParameter("AstCalAstData", &_astdata.cfg.astCfg, sizeof(Blob::AstCalAstData_t), NVSInterface::TypeBlob)){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo AstData!");
 		success = false;
+	}
+	for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
+		char periodname[16];
+		sprintf(periodname, "AstCalPeriod_%d", i);
+		if(!restoreParameter(periodname, &_astdata.cfg.periods[i], sizeof(Blob::AstCalPeriod_t), NVSInterface::TypeBlob)){
+			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo Period_%d!", i);
+		}
 	}
 	if(!restoreParameter("AstCalChecksum", &crc, sizeof(uint32_t), NVSInterface::TypeUint32)){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo Checksum!");
@@ -136,6 +155,7 @@ void AstCalendar::restoreConfig(){
 	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
 	strftime_buf[63] = 0;
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema %s", strftime_buf);
+
 }
 
 
@@ -155,6 +175,13 @@ void AstCalendar::saveConfig(){
 	}
 	if(!saveParameter("AstCalIVData", _astdata.cfg.seasonCfg.envText, Blob::LengthOfSeasonEnvText, NVSInterface::TypeString)){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando IVData!");
+	}
+	for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
+		char periodname[16];
+		sprintf(periodname, "AstCalPeriod_%d", i);
+		if(!saveParameter(periodname, &_astdata.cfg.periods[i], sizeof(Blob::AstCalPeriod_t), NVSInterface::TypeBlob)){
+			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando Period_%d!", i);
+		}
 	}
 	uint32_t crc = Blob::getCRC32(&_astdata.cfg, sizeof(Blob::AstCalCfgData_t));
 	if(!saveParameter("AstCalChecksum", &crc, sizeof(uint32_t), NVSInterface::TypeUint32)){
@@ -215,6 +242,12 @@ void AstCalendar::_updateConfig(const Blob::AstCalCfgData_t& cfg, uint32_t keys,
 	if(keys & Blob::AstCalKeyCfgSeason){
 		strcpy(_astdata.cfg.seasonCfg.envText, cfg.seasonCfg.envText);
 	}
+	if(keys & Blob::AstCalKeyCfgPeriods){
+		for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
+			_astdata.cfg.periods[i] = cfg.periods[i];
+		}
+	}
+
 _updateConfigExit:
 	strcpy(err.descr, Blob::errList[err.code]);
 }
