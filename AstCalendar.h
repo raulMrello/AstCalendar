@@ -17,6 +17,7 @@
 #include "RealTimeClock.h"
 #include "JsonParserBlob.h"
 
+
 /** Flag para habilitar el soporte de objetos JSON en las suscripciones a MQLib
  *  Por defecto DESACTIVADO
  */
@@ -80,43 +81,6 @@ class AstCalendar : public ActiveModule {
     bool isJSONSupported(){
     	return _json_supported;
     }
-
-
-	/**
-	 * Codifica la configuración actual en un objeto JSON astcal = {...}
-	 * @param cfg Configuración
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	static cJSON* encodeCfg(const Blob::AstCalCfgData_t& cfg);
-
-	/**
-	 * Codifica el estado actual en un objeto JSON astcal = {...}
-	 * @param stat Estado
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	static cJSON* encodeStat(const Blob::AstCalStatData_t& stat);
-
-	/**
-	 * Codifica el estado de arranque en un objeto JSON astcal = {...}
-	 * @param boot Estado de arranque
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	static cJSON* encodeBoot(const Blob::AstCalBootData_t& boot);
-
-	/**
-	 * Decodifica una operación SetRequest en la que se adjunta la nueva configuración a aplicar
-	 * @param req Recibe el objeto decodificado
-	 * @param json_data Objeto JSON recibido
-	 * @return True si la decodificación es correcta
-	 */
-	static bool decodeSetRequest(Blob::SetRequest_t<Blob::AstCalCfgData_t>&req, char* json_data);
-
-	/**
-	 * Codifica la configuración actual en un objeto JSON solicitado previamente con un idtrans
-	 * @param resp Respuesta con la configuración actual
-	 * @return Objeto JSON
-	 */
-	static cJSON* encodeCfgResponse(const Blob::Response_t<Blob::AstCalCfgData_t> &resp);
 
 
   private:
@@ -241,31 +205,6 @@ class AstCalendar : public ActiveModule {
 	 * @param err Recibe los errores generados durante la actualización
 	 */
 	void _updateConfig(const Blob::AstCalCfgData_t& cfg, uint32_t keys, Blob::ErrorData_t& err);
-
-
-	/**
-	 * Codifica la configuración actual en un objeto JSON astcal = {...}
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	cJSON* _encodeCfg(){
-		return encodeCfg(_astdata.cfg);
-	}
-
-	/**
-	 * Codifica el estado actual en un objeto JSON astcal = {...}
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	cJSON* _encodeStat(){
-		return encodeStat(_astdata.stat);
-	}
-
-	/**
-	 * Codifica la información de arranque en un objeto JSON astcal = {...}
-	 * @return Objeto JSON o NULL en caso de error
-	 */
-	cJSON* _encodeBoot(){
-		return encodeBoot(_astdata);
-	}
 
 };
      

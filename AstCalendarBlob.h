@@ -72,7 +72,9 @@ enum AstCalKeyNames{
 	AstCalKeyCfgRedSta	= (1 << 8),
 	AstCalKeyCfgRedStp	= (1 << 9),
 	AstCalKeyCfgSeason	= (1 << 10),
+	AstCalKeyCfgPeriods = (1 << 11),
 	//
+	AstCalKeyAny		= (1 << 31),
 	AstCalKeyCfgAll     = 0x7ff,
 };
 
@@ -89,8 +91,8 @@ enum AstCalKeyNames{
   * 	@var reductionStop Hora de finalización de la reducción de flujo luminoso nocturno en minuto
   */
 struct __packed AstCalAstData_t{
- 	int32_t latitude;
- 	int32_t longitude;
+ 	double latitude;
+ 	double longitude;
  	int16_t wdowDawnStart;
  	int16_t wdowDawnStop;
  	int16_t wdowDuskStart;
@@ -100,10 +102,10 @@ struct __packed AstCalAstData_t{
  };
 
 /** Límites min-max de los parámetros astronómicos */
-static const int32_t AstCalMinLatitude = -90000000;
-static const int32_t AstCalMaxLatitude =  90000000;
-static const int32_t AstCalMinLongitude = -180000000;
-static const int32_t AstCalMaxLongitude =  180000000;
+static const double AstCalMinLatitude = -90;
+static const double AstCalMaxLatitude =  90;
+static const double AstCalMinLongitude = -180;
+static const double AstCalMaxLongitude =  180;
 static const int16_t AstCalMinAstWdow = -1439;
 static const int16_t AstCalMaxAstWdow =  1439;
 static const uint16_t AstCalMaxAstRedct=  1439;
@@ -127,6 +129,22 @@ struct __packed AstCalSeason_t {
 };
 
 
+/** Estructura de datos para establecer un periodo temporal
+ * 	@var since Fecha de inicio (inclusiva)
+ * 	@var until Fecha de finalización (exclusiva)
+ * 	@var enabled Flag de activación
+ */
+struct __packed AstCalPeriod_t{
+	time_t since;
+	time_t until;
+	bool enabled;
+};
+
+
+/** Número máximo de periodos gestionables */
+static const uint16_t AstCalMaxPeriodCount = 8;
+
+
 /** Estructura de datos para la configuración en bloque del objeto AstCalendar.
  * 	Se forma por las distintas estructuras de datos de configuración
  * 	@var updFlags Flags de configuración de notificación de cambios de configuración
@@ -139,6 +157,7 @@ struct __packed AstCalCfgData_t{
 	AstCalEvtFlags evtFlagMask;
 	AstCalAstData_t astCfg;
 	AstCalSeason_t seasonCfg;
+	AstCalPeriod_t periods[AstCalMaxPeriodCount];
 };
 
 
@@ -159,7 +178,62 @@ struct __packed AstCalBootData_t{
 	AstCalStatData_t stat;
 };
 
-}
+}	// end namespace Blob
+
+
+namespace JSON {
+
+/**
+ * Codifica la configuración actual en un objeto JSON
+ * @param cfg Configuración
+ * @return Objeto JSON o NULL en caso de error
+ */
+cJSON* getJsonFromAstCalCfg(const Blob::AstCalCfgData_t& cfg);
+
+/**
+ * Codifica el estado actual en un objeto JSON
+ * @param stat Estado
+ * @return Objeto JSON o NULL en caso de error
+ */
+cJSON* getJsonFromAstCalStat(const Blob::AstCalStatData_t& stat);
+
+/**
+ * Codifica el estado de arranque en un objeto JSON
+ * @param boot Estado de arranque
+ * @return Objeto JSON o NULL en caso de error
+ */
+cJSON* getJsonFromAstCalBoot(const Blob::AstCalBootData_t& boot);
+
+
+
+/**
+ * Decodifica el mensaje JSON en un objeto de configuración
+ * @param obj Recibe el objeto decodificado
+ * @param json Objeto JSON a decodificar
+ * @return keys Parámetros decodificados o 0 en caso de error
+ */
+uint32_t getAstCalCfgFromJson(Blob::AstCalCfgData_t &obj, cJSON* json);
+
+
+/**
+ * Decodifica el mensaje JSON en un objeto de estado
+ * @param obj Recibe el objeto decodificado
+ * @param json Objeto JSON a decodificar
+ * @return keys Parámetros decodificados o 0 en caso de error
+ */
+uint32_t getAstCalStatFromJson(Blob::AstCalStatData_t &obj, cJSON* json);
+
+
+/**
+ * Decodifica el mensaje JSON en un objeto de arranque
+ * @param obj Recibe el objeto decodificado
+ * @param json Objeto JSON a decodificar
+ * @return keys Parámetros decodificados o 0 en caso de error
+ */
+uint32_t getAstCalBootFromJson(Blob::AstCalBootData_t &obj, cJSON* json);
+
+
+}	// end namespace JSON
 
 
 
