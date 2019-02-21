@@ -164,22 +164,24 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			_astdata.stat.period = 0;
 			// clono la configuración en la variable de estado a devolver
 			_astdata.stat.astData = _astdata.cfg.astCfg;
-
+			Blob::NotificationData_t<Blob::AstCalBootData_t> *notif = new Blob::NotificationData_t<Blob::AstCalBootData_t>(_astdata);
+			MBED_ASSERT(notif);
 			if(_json_supported){
-				cJSON* jboot = JsonParser::getJsonFromObj(_astdata);
+				cJSON* jboot = JsonParser::getJsonFromNotification(*notif);
 				if(jboot){
 					char* jmsg = cJSON_Print(jboot);
 					cJSON_Delete(jboot);
 					MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
 					Heap::memFree(jmsg);
 					Heap::memFree(pub_topic);
+					delete(notif);
 					return State::HANDLED;
 				}
 			}
 
-			MQ::MQClient::publish(pub_topic, &_astdata, sizeof(Blob::AstCalBootData_t), &_publicationCb);
+			MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<Blob::AstCalBootData_t>), &_publicationCb);
 			Heap::memFree(pub_topic);
-
+			delete(notif);
             return State::HANDLED;
         }
         case State::EV_EXIT:{
