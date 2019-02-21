@@ -112,32 +112,35 @@ void AstCalendar::eventSimulatorCb() {
 	if((flags & _astdata.cfg.evtFlagMask)!=0){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "Notificando evento=%x", flags);
 		// crea el objeto a notificar
-		Blob::AstCalStatData_t stat;
-		stat.flags = flags;
-		stat.now = t;
+		Blob::NotificationData_t<Blob::AstCalStatData_t> *notif = new Blob::NotificationData_t<Blob::AstCalStatData_t>();
+		MBED_ASSERT(notif);
+		notif->data.flags = flags;
+		notif->data.now = t;
 #warning TODO: @@@--- Implementar periodo activo ---@@@
-		stat.period=0;
+		notif->data.period=0;
 		char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 		MBED_ASSERT(pub_topic);
 		sprintf(pub_topic, "stat/value/%s", _pub_topic_base);
 		// clono la configuración en la variable de estado a devolver
-		stat.astData = _astdata.cfg.astCfg;
+		notif->data.astData = _astdata.cfg.astCfg;
 
 		if(_json_supported){
-			cJSON* jstat = JsonParser::getJsonFromObj(stat);
+			cJSON* jstat = JsonParser::getJsonFromNotification(*notif);
 			if(jstat){
 				char* jmsg = cJSON_Print(jstat);
 				cJSON_Delete(jstat);
 				MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
 				Heap::memFree(jmsg);
 				Heap::memFree(pub_topic);
+				delete(notif);
 				return;
 			}
 		}
 
 		// publica estado
-		MQ::MQClient::publish(pub_topic, &stat, sizeof(Blob::AstCalStatData_t), &_publicationCb);
+		MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<Blob::AstCalStatData_t>), &_publicationCb);
 		Heap::memFree(pub_topic);
+		delete(notif);
 	}
 }
 
