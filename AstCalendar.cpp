@@ -110,7 +110,6 @@ void AstCalendar::eventSimulatorCb() {
 	}
 	// si hay flags que notificar...
 	if((flags & _astdata.cfg.evtFlagMask)!=0){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "Notificando evento=%x", flags);
 		// crea el objeto a notificar
 		Blob::NotificationData_t<Blob::AstCalStatData_t> *notif = new Blob::NotificationData_t<Blob::AstCalStatData_t>();
 		MBED_ASSERT(notif);
