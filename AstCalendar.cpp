@@ -13,7 +13,7 @@
 
 
 static const char* _MODULE_ = "[AstCal]........";
-#define _EXPR_	(_defdbg && !IS_ISR())
+#define _EXPR_	(!IS_ISR())
  
 //------------------------------------------------------------------------------------
 //-- PUBLIC METHODS IMPLEMENTATION ---------------------------------------------------
@@ -28,6 +28,13 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", os
 	#if ASTCAL_ENABLE_JSON_SUPPORT == 1
 	_json_supported = true;
 	#endif
+
+    if(defdbg){
+    	esp_log_level_set(_MODULE_, ESP_LOG_DEBUG);
+    }
+    else{
+    	esp_log_level_set(_MODULE_, ESP_LOG_WARN);
+    }
 
 	// Carga callbacks estáticas de publicación/suscripción
     _publicationCb = callback(this, &AstCalendar::publicationCb);
@@ -56,7 +63,7 @@ void AstCalendar::stopSimulator() {
 osStatus AstCalendar::putMessage(State::Msg *msg){
     osStatus ost = _queue.put(msg, ActiveModule::DefaultPutTimeout);
     if(ost != osOK){
-        DEBUG_TRACE_I(_EXPR_, _MODULE_, "QUEUE_PUT_ERROR %d", ost);
+        DEBUG_TRACE_E(_EXPR_, _MODULE_, "QUEUE_PUT_ERROR %d", ost);
     }
     return ost;
 }

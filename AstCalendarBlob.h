@@ -73,9 +73,10 @@ enum AstCalKeyNames{
 	AstCalKeyCfgRedStp	= (1 << 9),
 	AstCalKeyCfgSeason	= (1 << 10),
 	AstCalKeyCfgPeriods = (1 << 11),
+	AstCalKeyCfgVerbosity = (1 << 12),
 	//
 	AstCalKeyAny		= (1 << 31),
-	AstCalKeyCfgAll     = 0x7ff,
+	AstCalKeyCfgAll     = 0x1ffff,
 };
 
 
@@ -151,6 +152,7 @@ static const uint16_t AstCalMaxPeriodCount = 8;
  * 	@var evtFlags Flags de configuración de notificación de eventos
  * 	@var astCfg Parámetros astronómicos
  * 	@var seasonCfg Parámetros relativos a la zona y cambio horario
+ * 	@var verbosity Nivel de visualización para las trazas de depuración
  */
 struct __packed AstCalCfgData_t{
 	AstCalUpdFlags updFlagMask;
@@ -158,6 +160,8 @@ struct __packed AstCalCfgData_t{
 	AstCalAstData_t astCfg;
 	AstCalSeason_t seasonCfg;
 	AstCalPeriod_t periods[AstCalMaxPeriodCount];
+	esp_log_level_t verbosity;
+
 };
 
 
