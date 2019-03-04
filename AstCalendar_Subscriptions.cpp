@@ -13,7 +13,7 @@
 
 
 static const char* _MODULE_ = "[AstCal]........";
-#define _EXPR_	(_defdbg && !IS_ISR())
+#define _EXPR_	(!IS_ISR())
  
 
 //------------------------------------------------------------------------------------
