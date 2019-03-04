@@ -15,7 +15,7 @@
 
 
 static const char* _MODULE_ = "[AstCal]........";
-#define _EXPR_	(_defdbg && !IS_ISR())
+#define _EXPR_	(!IS_ISR())
 
 
 namespace JSON{
@@ -73,6 +73,8 @@ cJSON* getJsonFromAstCalCfg(const Blob::AstCalCfgData_t& cfg){
 		cJSON_AddItemToArray(array, item);
 	}
 	cJSON_AddItemToObject(astcal, JsonParser::p_periods, array);
+	// key: verbosity
+	cJSON_AddNumberToObject(astcal, JsonParser::p_verbosity, cfg.verbosity);
 
 	return astcal;
 }
@@ -221,6 +223,11 @@ uint32_t getAstCalCfgFromJson(Blob::AstCalCfgData_t &cfg, cJSON* json){
 			}
 		}
 	}
+	if((obj = cJSON_GetObjectItem(json,JsonParser::p_verbosity)) != NULL){
+		cfg.verbosity = obj->valueint;
+		keys |= Blob::AstCalKeyCfgVerbosity;
+	}
+
 	return keys;
 }
 

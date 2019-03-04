@@ -13,7 +13,7 @@
 
 
 static const char* _MODULE_ = "[AstCal]........";
-#define _EXPR_	(_defdbg && !IS_ISR())
+#define _EXPR_	(!IS_ISR())
  
 
 //------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			}
         	// si hay errores en el mensaje o en la actualización, devuelve resultado sin hacer nada
         	if(req->_error.code != Blob::ErrOK){
-        		DEBUG_TRACE_I(_EXPR_, _MODULE_, "ERR_UPD al actualizar code=%d", req->_error.code);
+        		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_UPD al actualizar code=%d", req->_error.code);
         		char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 				MBED_ASSERT(pub_topic);
 				sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);
@@ -91,7 +91,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 
         	// almacena en el sistema de ficheros
         	saveConfig();
-        	DEBUG_TRACE_D(_EXPR_, _MODULE_, "Config actualizada");
+        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Config actualizada");
 
         	// si está habilitada la notificación de actualización, lo notifica
         	if((_astdata.cfg.updFlagMask & Blob::EnableAstCalCfgUpdNotif) != 0){
@@ -151,6 +151,8 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 
         	// libera la memoria asignada al topic de publicación
 			Heap::memFree(pub_topic);
+
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Enviada respuesta con la configuracion solicitada");
             return State::HANDLED;
         }
 

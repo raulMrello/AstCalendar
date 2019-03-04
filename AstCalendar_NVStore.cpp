@@ -13,7 +13,7 @@
 
 
 static const char* _MODULE_ = "[AstCal]........";
-#define _EXPR_	(_defdbg && !IS_ISR())
+#define _EXPR_	(!IS_ISR())
  
 
 //------------------------------------------------------------------------------------
@@ -54,6 +54,7 @@ void AstCalendar::setDefaultConfig(){
 		_astdata.cfg.periods[i].until = 0;
 		_astdata.cfg.periods[i].enabled = false;
 	}
+	_astdata.cfg.verbosity = ESP_LOG_DEBUG;
 	saveConfig();
 }
 
@@ -61,7 +62,7 @@ void AstCalendar::setDefaultConfig(){
 //------------------------------------------------------------------------------------
 void AstCalendar::restoreConfig(){
 	uint32_t crc = 0;
-	DEBUG_TRACE_D(_EXPR_, _MODULE_, "Recuperando datos de memoria NV...");
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recuperando datos de memoria NV...");
 	bool success = true;
 	if(!restoreParameter("AstCalUpdFlags", &_astdata.cfg.updFlagMask, sizeof(uint32_t), NVSInterface::TypeUint32)){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo UpdFlags!");
@@ -90,10 +91,14 @@ void AstCalendar::restoreConfig(){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo Checksum!");
 		success = false;
 	}
+	if(!restoreParameter("AstCalVerbosity", &_astdata.cfg.verbosity, sizeof(esp_log_level_t), NVSInterface::TypeUint32)){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo verbosity!");
+		success = false;
+	}
 
 	if(success){
 		// chequea el checksum crc32 y después la integridad de los datos
-		DEBUG_TRACE_D(_EXPR_, _MODULE_, "Datos recuperados. Chequeando integridad...");
+		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Datos recuperados. Chequeando integridad...");
 		if(Blob::getCRC32(&_astdata.cfg, sizeof(Blob::AstCalCfgData_t)) != crc){
 			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_CFG. Ha fallado el checksum");
 		}
@@ -102,6 +107,7 @@ void AstCalendar::restoreConfig(){
     	}
     	else{
     		DEBUG_TRACE_D(_EXPR_, _MODULE_, "Check de integridad OK!");
+    		esp_log_level_set(_MODULE_, _astdata.cfg.verbosity);
     	}
 	}
 	else{
@@ -140,13 +146,12 @@ void AstCalendar::restoreConfig(){
 
 	setenv("TZ", _astdata.cfg.seasonCfg.envText, 1);
 	tzset() ;
-	DEBUG_TRACE_D(_EXPR_, _MODULE_, "Establece zona horaria '%s'", _astdata.cfg.seasonCfg.envText);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", _astdata.cfg.seasonCfg.envText);
 	time_t tnow = mktime(&_now);
 	timeval tv;
 	tv.tv_sec = tnow;
 	tv.tv_usec = 0;
 
-	DEBUG_TRACE_D(_EXPR_, _MODULE_, "Establece hora del sistema...");
 	settimeofday (&tv, NULL);
 	tnow = time(NULL);
 	localtime_r(&tnow, &_now);
@@ -161,7 +166,7 @@ void AstCalendar::restoreConfig(){
 
 //------------------------------------------------------------------------------------
 void AstCalendar::saveConfig(){
-	DEBUG_TRACE_D(_EXPR_, _MODULE_, "Guardando datos en memoria NV...");
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Guardando datos en memoria NV...");
 
 	// almacena en el sistema de ficheros
 	if(!saveParameter("AstCalUpdFlags", &_astdata.cfg.updFlagMask, sizeof(uint32_t), NVSInterface::TypeUint32)){
@@ -182,6 +187,12 @@ void AstCalendar::saveConfig(){
 		if(!saveParameter(periodname, &_astdata.cfg.periods[i], sizeof(Blob::AstCalPeriod_t), NVSInterface::TypeBlob)){
 			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando Period_%d!", i);
 		}
+	}
+	if(!saveParameter("AstCalVerbosity", &_astdata.cfg.verbosity, sizeof(esp_log_level_t), NVSInterface::TypeUint32)){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando verbosity!");
+	}
+	else{
+		esp_log_level_set(_MODULE_, _astdata.cfg.verbosity);
 	}
 	uint32_t crc = Blob::getCRC32(&_astdata.cfg, sizeof(Blob::AstCalCfgData_t));
 	if(!saveParameter("AstCalChecksum", &crc, sizeof(uint32_t), NVSInterface::TypeUint32)){
@@ -246,6 +257,9 @@ void AstCalendar::_updateConfig(const Blob::AstCalCfgData_t& cfg, uint32_t keys,
 		for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
 			_astdata.cfg.periods[i] = cfg.periods[i];
 		}
+	}
+	if(keys & Blob::AstCalKeyCfgVerbosity){
+		_astdata.cfg.verbosity = cfg.verbosity;
 	}
 
 _updateConfigExit:
