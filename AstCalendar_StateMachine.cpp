@@ -93,6 +93,38 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
         	saveConfig();
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Config actualizada");
 
+        	// si está habilitada la notificación de actualización, lo notifica
+        	if((_astdata.cfg.updFlags & CalendarManagerCfgUpdNotif) != 0){
+        		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Notificando actualización");
+				char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
+				MBED_ASSERT(pub_topic);
+				sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);
+
+				Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
+				MBED_ASSERT(resp);
+				if(_json_supported){
+					cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
+					if(jresp){
+						char* jmsg = cJSON_Print(jresp);
+						cJSON_Delete(jresp);
+						MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
+						Heap::memFree(jmsg);
+						delete(resp);
+						Heap::memFree(pub_topic);
+						return State::HANDLED;
+					}
+					else{
+						DEBUG_TRACE_E(_EXPR_, _MODULE_, "Error on getJsonFromResponse <%s>", resp->error.descr);
+						delete(resp);
+					}
+				}
+				else{
+					MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
+					delete(resp);
+				}
+				Heap::memFree(pub_topic);
+        	}
+
             return State::HANDLED;
         }
 

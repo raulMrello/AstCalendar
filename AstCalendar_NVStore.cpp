@@ -46,17 +46,19 @@ void AstCalendar::restoreConfig(){
 
 		if(calc_crc != crc){
 			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_CFG. Ha fallado el checksum");
+			success = false;
 		}
     	else if(!checkIntegrity()){
     		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_CFG. Ha fallado el check de integridad.");
+			success = false;
     	}
     	else{
     		DEBUG_TRACE_W(_EXPR_, _MODULE_, "Check de integridad OK!");
     		esp_log_level_set(_MODULE_, (esp_log_level_t)_astdata.cfg.verbosity);
-    		return;
     	}
 	}
-	else{
+
+	if(!success){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_FS. Error en la recuperación de datos. Establece configuración por defecto");
 		setDefaultConfig();
 	}
@@ -113,13 +115,15 @@ void AstCalendar::restoreConfig(){
 //------------------------------------------------------------------------------------
 bool AstCalendar::checkIntegrity(){
 	// verifico zona horaria
-	if(strlen(_astdata.clock.cfg.geoloc.timezone)<= 1 || strlen(_astdata.clock.cfg.geoloc.timezone) > strlen("GMT+XXGMT+XX,Mmm.s.w/hh:mm,Mmm.5.0/hh:mm")+1){
+	if(strlen(_astdata.clock.cfg.geoloc.timezone)==0){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY timezone=%s", _astdata.clock.cfg.geoloc.timezone);
 		return false;
 	}
 
 	// verifico periodos activos sin rangos establecidos
 	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
 		if((_astdata.clock.cfg.periods[i].since == 0 || _astdata.clock.cfg.periods[i].until == 0) && _astdata.clock.cfg.periods[i].enabled){
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY period=%d", i);
 			return false;
 		}
 	}
@@ -142,7 +146,7 @@ void AstCalendar::setDefaultConfig(){
 
 	// establezco configuración por defecto del manager
 	_astdata.cfg.updFlags = CalendarManagerCfgUpdNotif;
-	_astdata.cfg.evtFlags = (CalendarClockIVEvt | CalendarClockVIEvt | CalendarClockDayEvt | CalendarClockDawnEvt | CalendarClockDuskEvt | CalendarClockHourEvt | CalendarClockMinEvt | CalendarClockSecEvt);
+	_astdata.cfg.evtFlags = CalendarClockNoEvents;
 	_astdata.cfg.verbosity = ESP_LOG_DEBUG;
 
 	// establezco configuración por defecto del reloj integrado (para Madrid)
