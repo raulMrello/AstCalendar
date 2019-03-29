@@ -126,7 +126,10 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 			return NULL;
 		}
 		cJSON_AddNumberToObject(stat, JsonParser::p_flags, obj.stat.flags);
-		cJSON_AddNumberToObject(stat, JsonParser::p_period, obj.stat.period);
+		// sólo incluye <period> si tiene un valor válido >=0
+		if(obj.stat.period >= 0){
+			cJSON_AddNumberToObject(stat, JsonParser::p_period, obj.stat.period);
+		}
 		cJSON_AddNumberToObject(stat, JsonParser::p_localtime, obj.stat.localtime);
 		cJSON_AddNumberToObject(stat, JsonParser::p_dawn, obj.stat.dawn);
 		cJSON_AddNumberToObject(stat, JsonParser::p_dusk, obj.stat.dusk);
@@ -217,8 +220,7 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 
 //------------------------------------------------------------------------------------
 uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json){
-	uint32_t keys = 0;
-	uint32_t subkey = 0;
+	obj.cfg._keys = 0;
 	cJSON* value = NULL;
 	if(json == NULL){
 		return 0;
@@ -227,45 +229,41 @@ uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json){
 	// uid
 	if((value = cJSON_GetObjectItem(json,JsonParser::p_uid)) != NULL){
 		obj.uid = value->valueint;
-		keys |= (1 << 0);
+		obj.cfg._keys |= (1 << 0);
 	}
 
 	// cfg
-	obj.cfg._keys = 0;
 	if((value = cJSON_GetObjectItem(json, JsonParser::p_cfg)) != NULL){
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_updFlags)) != NULL){
 			obj.cfg.updFlags = value->valueint;
-			obj.cfg._keys |= (1 << 0);
+			obj.cfg._keys |= (1 << 1);
 		}
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_evtFlags)) != NULL){
 			obj.cfg.evtFlags = value->valueint;
-			obj.cfg._keys |= (1 << 1);
+			obj.cfg._keys |= (1 << 2);
 		}
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_verbosity)) != NULL){
 			obj.cfg.verbosity = value->valueint;
-			obj.cfg._keys |= (1 << 2);
+			obj.cfg._keys |= (1 << 3);
 		}
-		subkey = (obj.cfg._keys!=0)? (1 << 1) : 0;
-		keys |= subkey;
 	}
 
 	// stat
 	/*
 	if((value = cJSON_GetObjectItem(json, JsonParser::p_stat)) != NULL){
-		subkey = 0;
+		uint32_t subkey = 0;
 		//TODO: añadir objetos a procesar
 		subkey = (subkey!=0)? (1 << ??) : 0;
-		keys |= subkey;
+		obj.cfg._keys |= subkey;
 	}
 	*/
 
 	// clock
 	if((value = cJSON_GetObjectItem(json,JsonParser::p_clock)) != NULL){
-		subkey = getCalendarClockFromJson(obj.clock, value)? (1 << 2) : 0;
-		keys |= subkey;
+		uint32_t subkey = getCalendarClockFromJson(obj.clock, value)? (1 << 4) : 0;
+		obj.cfg._keys |= subkey;
 	}
-
-	return keys;
+	return obj.cfg._keys;
 }
 
 
@@ -316,8 +314,12 @@ uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_flags)) != NULL){
 			obj.stat.flags = value->valueint;
 		}
+		// si el periodo no está presente, lo marca como inválido (=-1)
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_period)) != NULL){
 			obj.stat.period = value->valueint;
+		}
+		else{
+			obj.stat.period = -1;
 		}
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_localtime)) != NULL){
 			obj.stat.localtime = (time_t)value->valuedouble;

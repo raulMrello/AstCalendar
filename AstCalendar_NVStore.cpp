@@ -14,49 +14,6 @@
 
 static const char* _MODULE_ = "[AstCal]........";
 #define _EXPR_	(!IS_ISR())
- 
-
-//------------------------------------------------------------------------------------
-bool AstCalendar::checkIntegrity(){
-	// verifico zona horaria
-	if(strlen(_astdata.cfg.seasonCfg.envText)<= 1 || strlen(_astdata.cfg.seasonCfg.envText) > strlen("GMT+XXGMT+XX,Mmm.s.w/hh:mm,Mmm.5.0/hh:mm")+1){
-		return false;
-	}
-
-	// verifico rangos astCfg
-	if(_astdata.cfg.astCfg.reductionStart > Blob::TimestampMinutesDayLimit || _astdata.cfg.astCfg.reductionStop > Blob::TimestampMinutesDayLimit ||
-	   _astdata.cfg.astCfg.wdowDawnStart > Blob::TimestampMinutesDayLimit || _astdata.cfg.astCfg.wdowDawnStop > Blob::TimestampMinutesDayLimit ||
-	   _astdata.cfg.astCfg.wdowDuskStart > Blob::TimestampMinutesDayLimit || _astdata.cfg.astCfg.wdowDuskStop > Blob::TimestampMinutesDayLimit){
-		return false;
-	}
-	// verifico periodos activos sin rangos establecidos
-	for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
-		if((_astdata.cfg.periods[i].since == 0 || _astdata.cfg.periods[i].until == 0) && _astdata.cfg.periods[i].enabled){
-			return false;
-		}
-	}
-	return true;
-}
-
-
-//------------------------------------------------------------------------------------
-void AstCalendar::setDefaultConfig(){
-	// inicializa notificación de flags
-	_astdata.cfg.updFlagMask = (Blob::AstCalUpdFlags)(Blob::EnableAstCalCfgUpdNotif);
-	_astdata.cfg.evtFlagMask = (Blob::AstCalEvtFlags)(Blob::AstCalIVEvt | Blob::AstCalVIEvt | Blob::AstCalDayEvt | Blob::AstCalDawnEvt | Blob::AstCalDuskEvt | Blob::AstCalHourEvt | Blob::AstCalMinEvt | Blob::AstCalSecEvt);
-	// desactiva toda la configuración astronómica y establece Madrid como localización por defecto
-	_astdata.cfg.astCfg = {40.416500, -3.702560, 0, 0, 0, 0, 0, 0};
-	// establece cambio horario por defecto de la zona UE
-	strcpy(_astdata.cfg.seasonCfg.envText, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
-	// desactiva todos los periodos
-	for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
-		_astdata.cfg.periods[i].since = 0;
-		_astdata.cfg.periods[i].until = 0;
-		_astdata.cfg.periods[i].enabled = false;
-	}
-	_astdata.cfg.verbosity = ESP_LOG_DEBUG;
-	saveConfig();
-}
 
 
 //------------------------------------------------------------------------------------
@@ -64,50 +21,39 @@ void AstCalendar::restoreConfig(){
 	uint32_t crc = 0;
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recuperando datos de memoria NV...");
 	bool success = true;
-	if(!restoreParameter("AstCalUpdFlags", &_astdata.cfg.updFlagMask, sizeof(uint32_t), NVSInterface::TypeUint32)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo UpdFlags!");
+	if(!restoreParameter("CalManCfg", &_astdata.cfg, sizeof(calendar_manager_cfg), NVSInterface::TypeBlob)){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo calendar_manager_cfg!");
 		success = false;
 	}
-	if(!restoreParameter("AstCalEvtFlags", &_astdata.cfg.evtFlagMask, sizeof(uint32_t), NVSInterface::TypeUint32)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo EvtFlags!");
+	if(!restoreParameter("CalClockCfg", &_astdata.clock.cfg, sizeof(calendar_clock_cfg), NVSInterface::TypeBlob)){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo calendar_clock_cfg!");
 		success = false;
 	}
-	if(!restoreParameter("AstCalIVData", _astdata.cfg.seasonCfg.envText, Blob::LengthOfSeasonEnvText, NVSInterface::TypeString)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo IVData!");
-		success = false;
-	}
-	if(!restoreParameter("AstCalAstData", &_astdata.cfg.astCfg, sizeof(Blob::AstCalAstData_t), NVSInterface::TypeBlob)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo AstData!");
-		success = false;
-	}
-	for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
-		char periodname[16];
-		sprintf(periodname, "AstCalPeriod_%d", i);
-		if(!restoreParameter(periodname, &_astdata.cfg.periods[i], sizeof(Blob::AstCalPeriod_t), NVSInterface::TypeBlob)){
-			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo Period_%d!", i);
-		}
-	}
-	if(!restoreParameter("AstCalChecksum", &crc, sizeof(uint32_t), NVSInterface::TypeUint32)){
+	if(!restoreParameter("CalManCrc", &crc, sizeof(uint32_t), NVSInterface::TypeUint32)){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo Checksum!");
-		success = false;
-	}
-	if(!restoreParameter("AstCalVerbosity", &_astdata.cfg.verbosity, sizeof(esp_log_level_t), NVSInterface::TypeUint32)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo verbosity!");
 		success = false;
 	}
 
 	if(success){
-		// chequea el checksum crc32 y después la integridad de los datos
-		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Datos recuperados. Chequeando integridad...");
-		if(Blob::getCRC32(&_astdata.cfg, sizeof(Blob::AstCalCfgData_t)) != crc){
+
+		// chequea el crc
+		uint8_t* crc_buf = (char*)malloc(sizeof(calendar_manager_cfg) + sizeof(calendar_clock_cfg));
+		MBED_ASSERT(crc_buf);
+		memcpy(crc_buf, &_astdata.cfg, sizeof(calendar_manager_cfg));
+		memcpy(&crc_buf[sizeof(calendar_manager_cfg)], &_astdata.clock.cfg, sizeof(calendar_clock_cfg));
+		uint32_t calc_crc = Blob::getCRC32(crc_buf, sizeof(calendar_manager_cfg) + sizeof(calendar_clock_cfg));
+		free(crc_buf);
+
+		if(calc_crc != crc){
 			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_CFG. Ha fallado el checksum");
 		}
     	else if(!checkIntegrity()){
-    		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_CFG. Ha fallado el check de integridad. Establece configuración por defecto.");
+    		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_CFG. Ha fallado el check de integridad.");
     	}
     	else{
-    		DEBUG_TRACE_D(_EXPR_, _MODULE_, "Check de integridad OK!");
-    		esp_log_level_set(_MODULE_, _astdata.cfg.verbosity);
+    		DEBUG_TRACE_W(_EXPR_, _MODULE_, "Check de integridad OK!");
+    		esp_log_level_set(_MODULE_, (esp_log_level_t)_astdata.cfg.verbosity);
+    		return;
     	}
 	}
 	else{
@@ -144,9 +90,9 @@ void AstCalendar::restoreConfig(){
 		}
 	}
 
-	setenv("TZ", _astdata.cfg.seasonCfg.envText, 1);
+	setenv("TZ", _astdata.clock.cfg.geoloc.timezone, 1);
 	tzset() ;
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", _astdata.cfg.seasonCfg.envText);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", _astdata.clock.cfg.geoloc.timezone);
 	time_t tnow = mktime(&_now);
 	timeval tv;
 	tv.tv_sec = tnow;
@@ -165,101 +111,107 @@ void AstCalendar::restoreConfig(){
 
 
 //------------------------------------------------------------------------------------
-void AstCalendar::saveConfig(){
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Guardando datos en memoria NV...");
+bool AstCalendar::checkIntegrity(){
+	// verifico zona horaria
+	if(strlen(_astdata.clock.cfg.geoloc.timezone)<= 1 || strlen(_astdata.clock.cfg.geoloc.timezone) > strlen("GMT+XXGMT+XX,Mmm.s.w/hh:mm,Mmm.5.0/hh:mm")+1){
+		return false;
+	}
 
-	// almacena en el sistema de ficheros
-	if(!saveParameter("AstCalUpdFlags", &_astdata.cfg.updFlagMask, sizeof(uint32_t), NVSInterface::TypeUint32)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando UpdFlags!");
-	}
-	if(!saveParameter("AstCalEvtFlags", &_astdata.cfg.evtFlagMask, sizeof(uint32_t), NVSInterface::TypeUint32)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando EvtFlags!");
-	}
-	if(!saveParameter("AstCalAstData", &_astdata.cfg.astCfg, sizeof(Blob::AstCalAstData_t), NVSInterface::TypeBlob)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando AstData!");
-	}
-	if(!saveParameter("AstCalIVData", _astdata.cfg.seasonCfg.envText, Blob::LengthOfSeasonEnvText, NVSInterface::TypeString)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando IVData!");
-	}
-	for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
-		char periodname[16];
-		sprintf(periodname, "AstCalPeriod_%d", i);
-		if(!saveParameter(periodname, &_astdata.cfg.periods[i], sizeof(Blob::AstCalPeriod_t), NVSInterface::TypeBlob)){
-			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando Period_%d!", i);
+	// verifico periodos activos sin rangos establecidos
+	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
+		if((_astdata.clock.cfg.periods[i].since == 0 || _astdata.clock.cfg.periods[i].until == 0) && _astdata.clock.cfg.periods[i].enabled){
+			return false;
 		}
 	}
-	if(!saveParameter("AstCalVerbosity", &_astdata.cfg.verbosity, sizeof(esp_log_level_t), NVSInterface::TypeUint32)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando verbosity!");
-	}
-	else{
-		esp_log_level_set(_MODULE_, _astdata.cfg.verbosity);
-	}
-	uint32_t crc = Blob::getCRC32(&_astdata.cfg, sizeof(Blob::AstCalCfgData_t));
-	if(!saveParameter("AstCalChecksum", &crc, sizeof(uint32_t), NVSInterface::TypeUint32)){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando Checksum!");
-	}
+
+	#warning TODO: otras verificaciones más exhaustivas
+	// ...
+
+	return true;
 }
 
 
 //------------------------------------------------------------------------------------
-void AstCalendar::_updateConfig(const Blob::AstCalCfgData_t& cfg, uint32_t keys, Blob::ErrorData_t& err){
-	if(keys == Blob::AstCalKeyNone){
-		err.code = Blob::ErrEmptyContent;
-		goto _updateConfigExit;
-	}
-	if( ((keys & Blob::AstCalKeyCfgLat) && (cfg.astCfg.latitude < Blob::AstCalMinLatitude || cfg.astCfg.latitude > Blob::AstCalMaxLatitude)) ||
-	    ((keys & Blob::AstCalKeyCfgLon) && (cfg.astCfg.longitude < Blob::AstCalMinLongitude || cfg.astCfg.longitude > Blob::AstCalMaxLongitude)) ||
-		((keys & Blob::AstCalKeyCfgWdaSta) && (cfg.astCfg.wdowDawnStart < Blob::AstCalMinAstWdow || cfg.astCfg.wdowDawnStart > Blob::AstCalMaxAstWdow)) ||
-		((keys & Blob::AstCalKeyCfgWdaStp) && (cfg.astCfg.wdowDawnStop < Blob::AstCalMinAstWdow || cfg.astCfg.wdowDawnStop > Blob::AstCalMaxAstWdow)) ||
-		((keys & Blob::AstCalKeyCfgWduSta) && (cfg.astCfg.wdowDuskStart < Blob::AstCalMinAstWdow || cfg.astCfg.wdowDuskStart > Blob::AstCalMaxAstWdow)) ||
-		((keys & Blob::AstCalKeyCfgWduStp) && (cfg.astCfg.wdowDuskStop < Blob::AstCalMinAstWdow || cfg.astCfg.wdowDuskStop > Blob::AstCalMaxAstWdow)) ||
-		((keys & Blob::AstCalKeyCfgRedSta) && cfg.astCfg.reductionStart > Blob::AstCalMaxAstRedct) ||
-		((keys & Blob::AstCalKeyCfgRedStp) && cfg.astCfg.reductionStop > Blob::AstCalMaxAstRedct) ||
-		((keys & Blob::AstCalKeyCfgSeason) && (strlen(cfg.seasonCfg.envText) == 0 ||  strlen(cfg.seasonCfg.envText) >= Blob::LengthOfSeasonEnvText))){
-		err.code = Blob::ErrRangeValue;
-		goto _updateConfigExit;
+void AstCalendar::setDefaultConfig(){
+
+	// borro la configuración y el estado
+	_astdata = {0};
+
+	// establezco versión del modelo de datos
+	_astdata.setVersion(VERS_CALENDAR_CURRENT);
+
+	// establezco configuración por defecto del manager
+	_astdata.cfg.updFlags = CalendarManagerCfgUpdNotif;
+	_astdata.cfg.evtFlags = (CalendarClockIVEvt | CalendarClockVIEvt | CalendarClockDayEvt | CalendarClockDawnEvt | CalendarClockDuskEvt | CalendarClockHourEvt | CalendarClockMinEvt | CalendarClockSecEvt);
+	_astdata.cfg.verbosity = ESP_LOG_DEBUG;
+
+	// establezco configuración por defecto del reloj integrado (para Madrid)
+	strcpy(_astdata.clock.cfg.geoloc.timezone, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
+	_astdata.clock.cfg.geoloc.coords[0] = 40.416500;
+	_astdata.clock.cfg.geoloc.coords[1] = -3.702560;
+	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
+		_astdata.clock.cfg.periods[i].since = 0;
+		_astdata.clock.cfg.periods[i].until = 0;
+		_astdata.clock.cfg.periods[i].enabled = false;
+		_astdata.clock.cfg.geoloc.astCorr[i][0] = 0;
+		_astdata.clock.cfg.geoloc.astCorr[i][1] = 0;
 	}
 
-	if(keys & Blob::AstCalKeyCfgUpd){
-		_astdata.cfg.updFlagMask = cfg.updFlagMask;
+	saveConfig();
+}
+
+
+
+//------------------------------------------------------------------------------------
+void AstCalendar::saveConfig(){
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Guardando datos en memoria NV...");
+
+	// almacena en el sistema de ficheros
+	if(!saveParameter("CalManCfg", &_astdata.cfg, sizeof(calendar_manager_cfg), NVSInterface::TypeBlob)){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando calendar_manager_cfg!");
 	}
-	if(keys & Blob::AstCalKeyCfgEvt){
-		_astdata.cfg.evtFlagMask = cfg.evtFlagMask;
+	if(!saveParameter("CalClockCfg", &_astdata.clock.cfg, sizeof(calendar_clock_cfg), NVSInterface::TypeBlob)){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando calendar_clock_cfg!");
 	}
-	if(keys & Blob::AstCalKeyCfgLat){
-		_astdata.cfg.astCfg.latitude = cfg.astCfg.latitude;
+
+	// genera el crc
+	uint8_t* crc_buf = (char*)malloc(sizeof(calendar_manager_cfg) + sizeof(calendar_clock_cfg));
+	MBED_ASSERT(crc_buf);
+	memcpy(crc_buf, &_astdata.cfg, sizeof(calendar_manager_cfg));
+	memcpy(&crc_buf[sizeof(calendar_manager_cfg)], &_astdata.clock.cfg, sizeof(calendar_clock_cfg));
+	uint32_t crc = Blob::getCRC32(crc_buf, sizeof(calendar_manager_cfg) + sizeof(calendar_clock_cfg));
+	free(crc_buf);
+
+	// graba el crc
+	if(!saveParameter("CalManCrc", &crc, sizeof(uint32_t), NVSInterface::TypeUint32)){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando Checksum!");
 	}
-	if(keys & Blob::AstCalKeyCfgLon){
-		_astdata.cfg.astCfg.longitude = cfg.astCfg.longitude;
+
+	// aplica el nivel de verbosidad configurado
+	esp_log_level_set(_MODULE_, (esp_log_level_t)_astdata.cfg.verbosity);
+}
+
+
+//------------------------------------------------------------------------------------
+void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t& err){
+	err.code = Blob::ErrOK;
+
+	// evalúo calendar:manager:cfg
+	if((data.cfg._keys & (1 << 0)) && data.uid != _astdata.uid){
+		err.code = Blob::ErrUidInvalid;
+		goto _updateConfigExit;
 	}
-	if(keys & Blob::AstCalKeyCfgWdaSta){
-		_astdata.cfg.astCfg.wdowDawnStart = cfg.astCfg.wdowDawnStart;
+	if((data.cfg._keys & (1 << 1))){
+		_astdata.cfg.updFlags = data.cfg.updFlags;
 	}
-	if(keys & Blob::AstCalKeyCfgWdaStp){
-		_astdata.cfg.astCfg.wdowDawnStop = cfg.astCfg.wdowDawnStop;
+	if((data.cfg._keys & (1 << 2))){
+		_astdata.cfg.evtFlags = data.cfg.evtFlags;
 	}
-	if(keys & Blob::AstCalKeyCfgWduSta){
-		_astdata.cfg.astCfg.wdowDuskStart = cfg.astCfg.wdowDuskStart;
+	if((data.cfg._keys & (1 << 3))){
+		_astdata.cfg.verbosity = data.cfg.verbosity;
 	}
-	if(keys & Blob::AstCalKeyCfgWduStp){
-		_astdata.cfg.astCfg.wdowDuskStop = cfg.astCfg.wdowDuskStop;
-	}
-	if(keys & Blob::AstCalKeyCfgRedSta){
-		_astdata.cfg.astCfg.reductionStart = cfg.astCfg.reductionStart;
-	}
-	if(keys & Blob::AstCalKeyCfgRedStp){
-		_astdata.cfg.astCfg.reductionStop = cfg.astCfg.reductionStop;
-	}
-	if(keys & Blob::AstCalKeyCfgSeason){
-		strcpy(_astdata.cfg.seasonCfg.envText, cfg.seasonCfg.envText);
-	}
-	if(keys & Blob::AstCalKeyCfgPeriods){
-		for(int i=0;i<Blob::AstCalMaxPeriodCount; i++){
-			_astdata.cfg.periods[i] = cfg.periods[i];
-		}
-	}
-	if(keys & Blob::AstCalKeyCfgVerbosity){
-		_astdata.cfg.verbosity = cfg.verbosity;
+	if((data.cfg._keys & (1 << 4))){
+		_astdata.clock.cfg = data.clock.cfg;
 	}
 
 _updateConfigExit:

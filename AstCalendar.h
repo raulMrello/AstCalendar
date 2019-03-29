@@ -16,6 +16,7 @@
 #include "AstCalendarBlob.h"
 #include "RealTimeClock.h"
 #include "JsonParserBlob.h"
+#include "calendar_objects.h"
 
 
 /** Flag para habilitar el soporte de objetos JSON en las suscripciones a MQLib
@@ -100,7 +101,7 @@ class AstCalendar : public ActiveModule {
     Queue<State::Msg, MaxQueueMessages> _queue;
 
     /** Datos de configuración y estado */
-    Blob::AstCalBootData_t _astdata;
+    calendar_manager _astdata;
 
     /** Timer de simulación de eventos */
     RtosTimer* _sim_tmr;
@@ -204,7 +205,7 @@ class AstCalendar : public ActiveModule {
 	 * @param keys Flags de parámetros actualizados
 	 * @param err Recibe los errores generados durante la actualización
 	 */
-	void _updateConfig(const Blob::AstCalCfgData_t& cfg, uint32_t keys, Blob::ErrorData_t& err);
+	void _updateConfig(const calendar_manager& data, Blob::ErrorData_t& err);
 
 };
      

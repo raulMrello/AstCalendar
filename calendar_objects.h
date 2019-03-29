@@ -26,6 +26,8 @@
 #define VERS_CALENDAR_DEFAULT		0
 #define VERS_CALENDAR_NAME_0		""
 
+#define VERS_CALENDAR_CURRENT		VERS_CALENDAR_DEFAULT
+
 
 
 static inline const char* VERS_CALENDAR_NAME(int vers){
@@ -78,6 +80,11 @@ static const uint8_t CalendarClockCfgMaxNumPeriods = 8;
 /** Tamaño máximo del texto asociado a la variable calendar:geoloc/timezone */
 static const uint8_t CalendarGeolocTimezoneLength = 64;
 
+/** Límites min-max de los parámetros astronómicos */
+static const double CalendarGeolocLatitudeMin = -90;
+static const double CalendarGeolocLatitudeMax =  90;
+static const double CalendarGeolocLongitudeMin = -180;
+static const double CalendarGeolocLongitudeMax =  180;
 
 
 /**Objeto calendar:geoloc */
@@ -86,6 +93,9 @@ struct calendar_geoloc{
 	double 	 coords[2];
 	char   	 timezone[CalendarGeolocTimezoneLength];
 	time_t 	 astCorr[CalendarClockCfgMaxNumPeriods][2];
+	void setVersion(uint32_t vers){
+		uid = UID_CALENDAR_GEOLOC(vers);
+	}
 };
 
 
@@ -95,6 +105,9 @@ struct calendar_period{
 	time_t   since;
 	time_t   until;
 	bool     enabled;
+	void setVersion(uint32_t vers){
+		uid = UID_CALENDAR_PERIOD(vers);
+	}
 };
 
 
@@ -109,7 +122,7 @@ struct calendar_clock_cfg{
 /**Objeto calendar:clock:stat */
 struct calendar_clock_stat{
 	uint32_t flags;
-	uint8_t  period;
+	int8_t   period;
 	time_t	 localtime;
 	time_t   dawn;
 	time_t   dusk;
@@ -121,6 +134,13 @@ struct calendar_clock{
 	uint32_t uid;
 	calendar_clock_cfg  cfg;
 	calendar_clock_stat stat;
+	void setVersion(uint32_t vers){
+		uid = UID_CALENDAR_CLOCK(vers);
+		cfg.geoloc.setVersion(vers);
+		for(int i=0; i<CalendarClockCfgMaxNumPeriods; i++){
+			cfg.periods[i].setVersion(vers);
+		}
+	}
 };
 
 
@@ -138,6 +158,10 @@ struct calendar_manager{
 	uint32_t uid;
 	calendar_manager_cfg cfg;
 	calendar_clock clock;
+	void setVersion(uint32_t vers){
+		uid = UID_CALENDAR_MANAGER(vers);
+		clock.setVersion(vers);
+	}
 };
 
 
