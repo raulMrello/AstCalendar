@@ -93,6 +93,8 @@ struct calendar_geoloc{
 	double 	 coords[2];
 	char   	 timezone[CalendarGeolocTimezoneLength];
 	time_t 	 astCorr[CalendarClockCfgMaxNumPeriods][2];
+	uint8_t _numPeriods;
+	uint32_t _keys;
 	void setVersion(uint32_t vers){
 		uid = UID_CALENDAR_GEOLOC(vers);
 	}
@@ -115,7 +117,8 @@ struct calendar_period{
 struct calendar_clock_cfg{
 	calendar_period periods[CalendarClockCfgMaxNumPeriods];
 	calendar_geoloc geoloc;
-	uint8_t _keys;
+	uint8_t _numPeriods;
+	uint32_t _keys;
 };
 
 
@@ -134,6 +137,7 @@ struct calendar_clock{
 	uint32_t uid;
 	calendar_clock_cfg  cfg;
 	calendar_clock_stat stat;
+	uint32_t _keys;
 	void setVersion(uint32_t vers){
 		uid = UID_CALENDAR_CLOCK(vers);
 		cfg.geoloc.setVersion(vers);
@@ -149,7 +153,7 @@ struct calendar_manager_cfg{
 	uint32_t updFlags;
 	uint32_t evtFlags;
 	uint8_t  verbosity;
-	uint8_t _keys;
+	uint32_t _keys;
 };
 
 
@@ -158,6 +162,7 @@ struct calendar_manager{
 	uint32_t uid;
 	calendar_manager_cfg cfg;
 	calendar_clock clock;
+	uint32_t _keys;
 	void setVersion(uint32_t vers){
 		uid = UID_CALENDAR_MANAGER(vers);
 		clock.setVersion(vers);
@@ -182,6 +187,14 @@ cJSON* getJsonFromCalendarManager(const calendar_manager& obj, ObjDataSelection 
  * @return JSON resultante o NULL en caso de error
  */
 cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type);
+
+
+/**
+ * Codifica el objeto en un JSON
+ * @param obj Objeto
+ * @return JSON resultante o NULL en caso de error
+ */
+cJSON* getJsonFromCalendarClockCfg(const calendar_clock_cfg& obj);
 
 
 /**
@@ -232,6 +245,14 @@ uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json);
  * @return keys Parámetros decodificados o 0 en caso de error
  */
 uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json);
+
+/**
+ * Decodifica el mensaje JSON en un objeto
+ * @param obj Recibe el objeto decodificado
+ * @param json Objeto JSON a decodificar
+ * @return keys Parámetros decodificados o 0 en caso de error
+ */
+uint32_t getCalendarClockCfgFromJson(calendar_clock_cfg &obj, cJSON* json);
 
 /**
  * Decodifica el mensaje JSON en un objeto

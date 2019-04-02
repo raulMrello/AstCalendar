@@ -56,7 +56,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
         // Procesa datos recibidos de la publicación en cmd/$BASE/cfg/set
         case RecvCfgSet:{
         	Blob::SetRequest_t<calendar_manager>* req = (Blob::SetRequest_t<calendar_manager>*)st_msg->msg;
-        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nueva configuración keys=%x", req->data.cfg._keys);
+        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nueva configuración");
 			// si no hay errores, actualiza la configuración
 			if(req->_error.code == Blob::ErrOK){
 				_updateConfig(req->data, req->_error);

@@ -123,9 +123,15 @@ bool AstCalendar::checkIntegrity(){
 	// verifico periodos activos sin rangos establecidos
 	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
 		if((_astdata.clock.cfg.periods[i].since == 0 || _astdata.clock.cfg.periods[i].until == 0) && _astdata.clock.cfg.periods[i].enabled){
-			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY period=%d", i);
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY period=%d, since=%ld, until=%ld,enabled=%d", i,_astdata.clock.cfg.periods[i].since, _astdata.clock.cfg.periods[i].until, _astdata.clock.cfg.periods[i].enabled);
 			return false;
 		}
+	}
+
+	// Verifico número de periodos discordante
+	if((_astdata.clock.cfg._numPeriods != _astdata.clock.cfg.geoloc._numPeriods) || (_astdata.clock.cfg._numPeriods != CalendarClockCfgMaxNumPeriods) || (_astdata.clock.cfg.geoloc._numPeriods != CalendarClockCfgMaxNumPeriods)){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY clock_cfg_periods=%d, geoloc_periods=%d", _astdata.clock.cfg._numPeriods, _astdata.clock.cfg.geoloc._numPeriods);
+		return false;
 	}
 
 	#warning TODO: otras verificaciones más exhaustivas
@@ -160,6 +166,8 @@ void AstCalendar::setDefaultConfig(){
 		_astdata.clock.cfg.geoloc.astCorr[i][0] = 0;
 		_astdata.clock.cfg.geoloc.astCorr[i][1] = 0;
 	}
+	_astdata.clock.cfg._numPeriods = CalendarClockCfgMaxNumPeriods;
+	_astdata.clock.cfg.geoloc._numPeriods = CalendarClockCfgMaxNumPeriods;
 
 	saveConfig();
 }
@@ -200,22 +208,52 @@ void AstCalendar::saveConfig(){
 void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t& err){
 	err.code = Blob::ErrOK;
 
-	// evalúo calendar:manager:cfg
-	if((data.cfg._keys & (1 << 0)) && data.uid != _astdata.uid){
+	// calendadar_manager.uid
+	if((data._keys & (1 << 0)) && data.uid != _astdata.uid){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_UPDATE uid inválido");
 		err.code = Blob::ErrUidInvalid;
 		goto _updateConfigExit;
 	}
-	if((data.cfg._keys & (1 << 1))){
-		_astdata.cfg.updFlags = data.cfg.updFlags;
+
+	// calendar_manager.cfg
+	if((data._keys & (1 << 1))){
+		if((data.cfg._keys & (1 << 0))){
+			_astdata.cfg.updFlags = data.cfg.updFlags;
+		}
+		if((data.cfg._keys & (1 << 1))){
+			_astdata.cfg.evtFlags = data.cfg.evtFlags;
+		}
+		if((data.cfg._keys & (1 << 2))){
+			_astdata.cfg.verbosity = data.cfg.verbosity;
+		}
 	}
-	if((data.cfg._keys & (1 << 2))){
-		_astdata.cfg.evtFlags = data.cfg.evtFlags;
-	}
-	if((data.cfg._keys & (1 << 3))){
-		_astdata.cfg.verbosity = data.cfg.verbosity;
-	}
-	if((data.cfg._keys & (1 << 4))){
-		_astdata.clock.cfg = data.clock.cfg;
+	// calendar:clock:cfg
+	if((data._keys & (1 << 2)) && (data.clock._keys & (1 << 1))){
+		// clock.cfg.periods
+		if((data.clock.cfg._keys & (1 << 0))){
+			for(int i=0;i<data.clock.cfg._numPeriods;i++){
+				_astdata.clock.cfg.periods[i] = data.clock.cfg.periods[i];
+			}
+		}
+		// calendar:clock:cfg:geoloc
+		if((data.clock.cfg._keys & (1 << 1))){
+			// coords
+			if((data.clock.cfg.geoloc._keys & (1 << 1))){
+				_astdata.clock.cfg.geoloc.coords[0] = data.clock.cfg.geoloc.coords[0];
+				_astdata.clock.cfg.geoloc.coords[1] = data.clock.cfg.geoloc.coords[1];
+			}
+			// timezone
+			if((data.clock.cfg.geoloc._keys & (1 << 2))){
+				strncpy(_astdata.clock.cfg.geoloc.timezone, data.clock.cfg.geoloc.timezone, CalendarGeolocTimezoneLength);
+			}
+			// astCorr
+			if((data.clock.cfg.geoloc._keys & (1 << 3))){
+				for(int i=0;i<data.clock.cfg.geoloc._numPeriods;i++){
+					_astdata.clock.cfg.geoloc.astCorr[i][0] = data.clock.cfg.geoloc.astCorr[i][0];
+					_astdata.clock.cfg.geoloc.astCorr[i][1] = data.clock.cfg.geoloc.astCorr[i][1];
+				}
+			}
+		}
 	}
 
 _updateConfigExit:

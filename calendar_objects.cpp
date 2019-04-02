@@ -44,19 +44,6 @@ cJSON* getJsonFromCalendarManager(const calendar_manager& obj, ObjDataSelection 
 		cJSON_AddItemToObject(json, JsonParser::p_cfg, cfg);
 	}
 
-	// stat
-	/*
-	if(type != ObjSelectCfg){
-		cJSON* stat = NULL;
-		if((stat=cJSON_CreateObject()) == NULL){
-			cJSON_Delete(json);
-			return NULL;
-		}
-		// TODO: Añadir contenido si es necesario
-		cJSON_AddItemToObject(json, JsonParser::p_stat, stat);
-	}
-	*/
-
 	// clock
 	if((item = getJsonFromCalendarClock(obj.clock, type)) == NULL){
 		cJSON_Delete(json);
@@ -87,35 +74,13 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 			return NULL;
 		}
 
-		// cfg.periods
-		cJSON* array = NULL;
-		if((array=cJSON_CreateArray()) == NULL){
+		if((item = getJsonFromCalendarClockCfg(obj.cfg)) == NULL){
 			cJSON_Delete(cfg);
 			cJSON_Delete(json);
-			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock.cfg.periods[] = null");
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock.cfg = null");
 			return NULL;
 		}
-		for(int i=0; i<CalendarClockCfgMaxNumPeriods; i++){
-			if((item = getJsonFromCalendarPeriod(obj.cfg.periods[i])) == NULL){
-				cJSON_Delete(array);
-				cJSON_Delete(cfg);
-				cJSON_Delete(json);
-				DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock.cfg.periods[%d] = null", i);
-				return NULL;
-			}
-			cJSON_AddItemToArray(array, item);
-		}
-		cJSON_AddItemToObject(cfg, JsonParser::p_periods, array);
-
-		// cfg.geoloc
-		if((item = getJsonFromCalendarGeoloc(obj.cfg.geoloc)) == NULL){
-			cJSON_Delete(cfg);
-			cJSON_Delete(json);
-			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock.cfg.geoloc = null");
-			return NULL;
-		}
-		cJSON_AddItemToObject(cfg, JsonParser::p_geoloc, item);
-		cJSON_AddItemToObject(json, JsonParser::p_cfg, cfg);
+		cJSON_AddItemToObject(json, JsonParser::p_cfg, item);
 	}
 
 	// stat
@@ -135,6 +100,44 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 		cJSON_AddNumberToObject(stat, JsonParser::p_dusk, obj.stat.dusk);
 		cJSON_AddItemToObject(json, JsonParser::p_stat, stat);
 	}
+	return json;
+}
+
+
+//------------------------------------------------------------------------------------
+cJSON* getJsonFromCalendarClockCfg(const calendar_clock_cfg& obj){
+	cJSON* json = NULL;
+	cJSON* item = NULL;
+	if((json=cJSON_CreateObject()) == NULL){
+		return NULL;
+	}
+
+	// cfg.periods
+	cJSON* array = NULL;
+	if((array=cJSON_CreateArray()) == NULL){
+		cJSON_Delete(json);
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock_cfg.periods[] = null");
+		return NULL;
+	}
+	for(int i=0; i<obj._numPeriods; i++){
+		if((item = getJsonFromCalendarPeriod(obj.periods[i])) == NULL){
+			cJSON_Delete(array);
+			cJSON_Delete(json);
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock_cfg.periods[%d] = null", i);
+			return NULL;
+		}
+		cJSON_AddItemToArray(array, item);
+	}
+	cJSON_AddItemToObject(json, JsonParser::p_periods, array);
+
+	// cfg.geoloc
+	if((item = getJsonFromCalendarGeoloc(obj.geoloc)) == NULL){
+		cJSON_Delete(json);
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock_cfg.geoloc = null");
+		return NULL;
+	}
+	cJSON_AddItemToObject(json, JsonParser::p_geoloc, item);
+
 	return json;
 }
 
@@ -220,58 +223,53 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 
 //------------------------------------------------------------------------------------
 uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json){
-	obj.cfg._keys = 0;
+	obj._keys = 0;
 	cJSON* value = NULL;
 	if(json == NULL){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR calendar_manager json is Null");
 		return 0;
 	}
 
 	// uid
 	if((value = cJSON_GetObjectItem(json,JsonParser::p_uid)) != NULL){
 		obj.uid = value->valueint;
-		obj.cfg._keys |= (1 << 0);
+		obj._keys |= (1 << 0);
 	}
 
 	// cfg
+	obj.cfg._keys = 0;
 	if((value = cJSON_GetObjectItem(json, JsonParser::p_cfg)) != NULL){
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_updFlags)) != NULL){
 			obj.cfg.updFlags = value->valueint;
-			obj.cfg._keys |= (1 << 1);
+			obj.cfg._keys |= (1 << 0);
 		}
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_evtFlags)) != NULL){
 			obj.cfg.evtFlags = value->valueint;
-			obj.cfg._keys |= (1 << 2);
+			obj.cfg._keys |= (1 << 1);
 		}
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_verbosity)) != NULL){
 			obj.cfg.verbosity = value->valueint;
-			obj.cfg._keys |= (1 << 3);
+			obj.cfg._keys |= (1 << 2);
+		}
+		if(obj.cfg._keys){
+			obj._keys |= (1 << 1);
 		}
 	}
 
-	// stat
-	/*
-	if((value = cJSON_GetObjectItem(json, JsonParser::p_stat)) != NULL){
-		uint32_t subkey = 0;
-		//TODO: añadir objetos a procesar
-		subkey = (subkey!=0)? (1 << ??) : 0;
-		obj.cfg._keys |= subkey;
-	}
-	*/
-
 	// clock
 	if((value = cJSON_GetObjectItem(json,JsonParser::p_clock)) != NULL){
-		uint32_t subkey = getCalendarClockFromJson(obj.clock, value)? (1 << 4) : 0;
-		obj.cfg._keys |= subkey;
+		uint32_t subkey = getCalendarClockFromJson(obj.clock, value)? (1 << 2) : 0;
+		obj._keys |= subkey;
 	}
-	return obj.cfg._keys;
+	return obj._keys;
 }
 
 
 //------------------------------------------------------------------------------------
 uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
-	uint32_t keys = 0;
 	uint32_t subkey = 0;
 	cJSON* value = NULL;
+	obj._keys = 0;
 	if(json == NULL){
 		return 0;
 	}
@@ -279,37 +277,17 @@ uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 	// uid
 	if((value = cJSON_GetObjectItem(json,JsonParser::p_uid)) != NULL){
 		obj.uid = value->valueint;
-		keys |= (1 << 0);
+		obj._keys |= (1 << 0);
 	}
 
 	// cfg
-	obj.cfg._keys = 0;
 	if((value = cJSON_GetObjectItem(json, JsonParser::p_cfg)) != NULL){
-		cJSON* array = NULL;
-
-		// cfg.periods
-		if((array = cJSON_GetObjectItem(value, JsonParser::p_periods)) != NULL){
-			if(cJSON_GetArraySize(array) <= CalendarClockCfgMaxNumPeriods){
-				subkey = cJSON_GetArraySize(array);
-				for(int i=0;i<cJSON_GetArraySize(array);i++){
-					cJSON* item = cJSON_GetArrayItem(array, i);
-					subkey = getCalendarPeriodFromJson(obj.cfg.periods[i], item)? (subkey-1) : subkey;
-				}
-				if(subkey == 0){
-					obj.cfg._keys |= (1 << 0);
-				}
-			}
-		}
-
-		// cfg.geoloc
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_geoloc)) != NULL){
-			obj.cfg._keys = getCalendarGeolocFromJson(obj.cfg.geoloc, value)? (1 << 1) : 0;
-		}
-		subkey = (obj.cfg._keys!=0)? (1 << 1) : 0;
-		keys |= subkey;
+		subkey = getCalendarClockCfgFromJson(obj.cfg, value)? (1 << 1) : 0;
+		obj._keys |= subkey;
 	}
 
 	// stat
+	subkey = 0;
 	if((value = cJSON_GetObjectItem(json, JsonParser::p_stat)) != NULL){
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_flags)) != NULL){
 			obj.stat.flags = value->valueint;
@@ -330,10 +308,48 @@ uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_dusk)) != NULL){
 			obj.stat.dusk = (time_t)value->valuedouble;
 		}
-		keys |= (1 << 2);
+		subkey = (1 << 2);
 	}
 
-	return keys;
+	return (obj._keys | subkey);
+}
+
+
+//------------------------------------------------------------------------------------
+uint32_t getCalendarClockCfgFromJson(calendar_clock_cfg &obj, cJSON* json){
+	uint32_t keys = 0;
+	uint32_t subkey = 0;
+	cJSON* value = NULL;
+	cJSON* array = NULL;
+	obj._keys = 0;
+
+	if(json == NULL){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR json calendar.clock.cfg is Null");
+		return obj._keys;
+	}
+
+	// cfg.periods
+	if((array = cJSON_GetObjectItem(json, JsonParser::p_periods)) != NULL){
+		if(cJSON_GetArraySize(array) <= CalendarClockCfgMaxNumPeriods){
+			obj._numPeriods = cJSON_GetArraySize(array);
+			subkey = obj._numPeriods;
+			for(int i=0;i<cJSON_GetArraySize(array);i++){
+				cJSON* item = cJSON_GetArrayItem(array, i);
+				subkey = getCalendarPeriodFromJson(obj.periods[i], item)? (subkey-1) : subkey;
+			}
+			if(subkey == 0){
+				obj._keys |= (1 << 0);
+			}
+		}
+	}
+
+	// cfg.geoloc
+	if((value = cJSON_GetObjectItem(json,JsonParser::p_geoloc)) != NULL){
+		subkey = getCalendarGeolocFromJson(obj.geoloc, value)? (1 << 1) : 0;
+		obj._keys |= subkey;
+	}
+
+	return obj._keys;
 }
 
 
@@ -344,7 +360,6 @@ uint32_t getCalendarPeriodFromJson(calendar_period &obj, cJSON* json){
 	if(json == NULL){
 		return 0;
 	}
-
 	// uid
 	if((value = cJSON_GetObjectItem(json,JsonParser::p_uid)) != NULL){
 		obj.uid = value->valueint;
@@ -374,28 +389,24 @@ uint32_t getCalendarPeriodFromJson(calendar_period &obj, cJSON* json){
 
 //------------------------------------------------------------------------------------
 uint32_t getCalendarGeolocFromJson(calendar_geoloc &obj, cJSON* json){
-	uint32_t keys = 0;
 	uint32_t subkey = 0;
 	cJSON* value = NULL;
+	obj._keys = 0;
+
 	if(json == NULL){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR json calendar.geoloc is Null");
 		return 0;
 	}
 
 	// uid
 	if((value = cJSON_GetObjectItem(json,JsonParser::p_uid)) != NULL){
 		obj.uid = value->valueint;
-		keys |= (1 << 0);
-	}
-
-	// timezone
-	if((value = cJSON_GetObjectItem(json,JsonParser::p_timezone)) != NULL){
-		strncpy(obj.timezone, value->valuestring, CalendarGeolocTimezoneLength);
-		keys |= (1 << 1);
+		obj._keys |= (1 << 0);
 	}
 
 	// coords
 	cJSON* array = NULL;
-	if((array = cJSON_GetObjectItem(value, JsonParser::p_coords)) != NULL){
+	if((array = cJSON_GetObjectItem(json, JsonParser::p_coords)) != NULL){
 		if(cJSON_GetArraySize(array) <= 2){
 			subkey = cJSON_GetArraySize(array);
 			for(int i=0;i<cJSON_GetArraySize(array);i++){
@@ -405,15 +416,22 @@ uint32_t getCalendarGeolocFromJson(calendar_geoloc &obj, cJSON* json){
 				}
 			}
 			if(subkey == 0){
-				keys |= (1 << 2);
+				obj._keys |= (1 << 1);
 			}
 		}
 	}
 
+	// timezone
+	if((value = cJSON_GetObjectItem(json,JsonParser::p_timezone)) != NULL){
+		strncpy(obj.timezone, value->valuestring, CalendarGeolocTimezoneLength);
+		obj._keys |= (1 << 2);
+	}
+
 	// astCorr
-	if((array = cJSON_GetObjectItem(value, JsonParser::p_astCorr)) != NULL){
+	if((array = cJSON_GetObjectItem(json, JsonParser::p_astCorr)) != NULL){
 		if(cJSON_GetArraySize(array) <= CalendarClockCfgMaxNumPeriods){
-			subkey = cJSON_GetArraySize(array);
+			obj._numPeriods = cJSON_GetArraySize(array);
+			subkey = obj._numPeriods;
 			for(int i=0;i<cJSON_GetArraySize(array);i++){
 				cJSON* array2 = NULL;
 				if((array2 = cJSON_GetArrayItem(array, i)) != NULL){
@@ -429,16 +447,14 @@ uint32_t getCalendarGeolocFromJson(calendar_geoloc &obj, cJSON* json){
 							subkey--;
 						}
 					}
-
 				}
 			}
 			if(subkey == 0){
-				keys |= (1 << 3);
+				obj._keys |= (1 << 3);
 			}
 		}
 	}
-
-	return keys;
+	return obj._keys;
 }
 
 
