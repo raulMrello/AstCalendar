@@ -34,6 +34,7 @@ static bool s_test_done = false;
 //------------------------------------------------------------------------------------
 
 static AstCalendar* astcal=NULL;
+static calendar_manager calendar = {0};
 static const char* _MODULE_ = "[TEST_AstCal]...";
 #define _EXPR_	(true)
 
@@ -50,6 +51,8 @@ static const char* _MODULE_ = "[TEST_AstCal]...";
  */
 TEST_CASE("Init & MQLib suscription..............", "[AstCalendar]") {
 
+	esp_log_level_set("*", ESP_LOG_DEBUG);
+
 	// ejecuta requisitos previos
 	executePrerequisites();
 
@@ -60,13 +63,19 @@ TEST_CASE("Init & MQLib suscription..............", "[AstCalendar]") {
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Iniciando AstCalendar... ");
 	astcal = new AstCalendar(fs, true);
 	MBED_ASSERT(astcal);
+	// activa soporte JSON
+	astcal->setJSONSupport(true);
+	TEST_ASSERT_TRUE(astcal->isJSONSupported());
+	// establece topics base pub-sub
     astcal->setPublicationBase("astcal");
     astcal->setSubscriptionBase("astcal");
+    // espera a que arranque
     while(!astcal->ready()){
 		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Esperando a AstCalendar");
 		Thread::wait(1000);
 	}
 	TEST_ASSERT_TRUE(astcal->ready());
+	Thread::wait(1000);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "AstCalendar OK!");
 }
 
@@ -77,11 +86,7 @@ TEST_CASE("Init & MQLib suscription..............", "[AstCalendar]") {
  * AstCalendar debe ser compilado con la opción ASTCAL_ENABLE_JSON_SUPPORT=1 o se debe
  * activar dicha capacidad mediante AstCalendar::setJSONSupport(true)
  */
-TEST_CASE("JSON support .........................", "[AstCalendar]"){
-
-	// activa soporte JSON
-	astcal->setJSONSupport(true);
-	TEST_ASSERT_TRUE(astcal->isJSONSupported());
+TEST_CASE("Get Boot Stream.......................", "[AstCalendar]"){
 
 	// -----------------------------------------------
 	// borra flag de resultado
@@ -99,8 +104,21 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
 		Thread::wait(100);
 		count += 0.1;
 	}while(!s_test_done && count < 10);
+	Thread::wait(1000);
 	TEST_ASSERT_TRUE(s_test_done);
+}
 
+
+//---------------------------------------------------------------------------
+/**
+ * @brief Se verifican las publicaciones y suscripciones JSON, para ello el módulo
+ * AstCalendar debe ser compilado con la opción ASTCAL_ENABLE_JSON_SUPPORT=1 o se debe
+ * activar dicha capacidad mediante AstCalendar::setJSONSupport(true)
+ */
+TEST_CASE("Get Config Data.......................", "[AstCalendar]"){
+	char* msg;
+	MQ::ErrorResult res;
+	double count = 0;
 	// -----------------------------------------------
 	// borra flag de resultado
 	s_test_done = false;
@@ -127,45 +145,7 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
 		Thread::wait(100);
 		count += 0.1;
 	}while(!s_test_done && count < 10);
-	TEST_ASSERT_TRUE(s_test_done);
-
-	// -----------------------------------------------
-	// borra flag de resultado
-	s_test_done = false;
-
-	// actualiza la configuración mediante un SetRequest
-	Blob::SetRequest_t<Blob::AstCalCfgData_t> req = {0};
-	req.idTrans = 2;
-	req.data.updFlagMask = Blob::EnableAstCalCfgUpdNotif;
-	req.data.evtFlagMask = Blob::AstCalMinEvt;
-	req.data.astCfg.latitude = 40.0;
-	req.data.astCfg.longitude = -3.0;
-	req.data.astCfg.wdowDawnStart = -60;
-	req.data.astCfg.wdowDawnStop = 60;
-	req.data.astCfg.wdowDuskStart = -120;
-	req.data.astCfg.wdowDuskStop = 120;
-	req.data.astCfg.reductionStart = 100;
-	req.data.astCfg.reductionStop = 200;
-	strcpy(req.data.seasonCfg.envText, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
-
-	jreq = JsonParser::getJsonFromSetRequest(req, JsonParser::p_data);
-	TEST_ASSERT_NOT_NULL(jreq);
-	msg = cJSON_Print(jreq);
-	TEST_ASSERT_NOT_NULL(msg);
-	cJSON_Delete(jreq);
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Request:\r\nto:set/cfg/astcal\r\nmsg:%s", msg);
-
-	res = MQ::MQClient::publish("set/cfg/astcal", msg, strlen(msg)+1, &s_published_cb);
-	TEST_ASSERT_EQUAL(res, MQ::SUCCESS);
-	Heap::memFree(msg);
-
-	// wait for response at least 10 seconds, yielding this thread
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Wait 10secs to get a response...");
-	count = 0;
-	do{
-		Thread::wait(100);
-		count += 0.1;
-	}while(!s_test_done && count < 10);
+	Thread::wait(1000);
 	TEST_ASSERT_TRUE(s_test_done);
 }
 
@@ -176,76 +156,18 @@ TEST_CASE("JSON support .........................", "[AstCalendar]"){
  * AstCalendar debe ser compilado con la opción ASTCAL_ENABLE_JSON_SUPPORT=1 o se debe
  * activar dicha capacidad mediante AstCalendar::setJSONSupport(true)
  */
-TEST_CASE("Blob support .........................", "[AstCalendar]"){
-
-	// activa soporte JSON
-	astcal->setJSONSupport(false);
-	TEST_ASSERT_FALSE(astcal->isJSONSupported());
-
-	// -----------------------------------------------
-	// borra flag de resultado
-	s_test_done = false;
-
-	// solicita la trama de arranque
-	char* msg = "{}";
-	MQ::ErrorResult res = MQ::MQClient::publish("get/boot/astcal", msg, strlen(msg)+1, &s_published_cb);
-	TEST_ASSERT_EQUAL(res, MQ::SUCCESS);
-
-	// wait for response at least 10 seconds, yielding this thread
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Wait 10secs to get a response...");
+TEST_CASE("Set Config Data [partial].............", "[AstCalendar]"){
+	MQ::ErrorResult res;
 	double count = 0;
-	do{
-		Thread::wait(100);
-		count += 0.1;
-	}while(!s_test_done && count < 10);
-	TEST_ASSERT_TRUE(s_test_done);
-
-	// -----------------------------------------------
-	// borra flag de resultado
-	s_test_done = false;
-
-	// solicita la configuración mediante un GetRequest
-	Blob::GetRequest_t greq;
-	greq.idTrans = 3;
-	greq._error.code = Blob::ErrOK;
-	greq._error.descr[0] = 0;
-
-	res = MQ::MQClient::publish("get/cfg/astcal", &greq, sizeof(Blob::GetRequest_t), &s_published_cb);
-	TEST_ASSERT_EQUAL(res, MQ::SUCCESS);
-
-
-	// wait for response at least 10 seconds, yielding this thread
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Wait 10secs to get a response...");
-	count = 0;
-	do{
-		Thread::wait(100);
-		count += 0.1;
-	}while(!s_test_done && count < 10);
-	TEST_ASSERT_TRUE(s_test_done);
 
 	// -----------------------------------------------
 	// borra flag de resultado
 	s_test_done = false;
 
 	// actualiza la configuración mediante un SetRequest
-	Blob::SetRequest_t<Blob::AstCalCfgData_t> sreq;
-	sreq.idTrans = 4;
-	sreq.keys = Blob::AstCalKeyCfgAll;
-	sreq._error.code = Blob::ErrOK;
-	sreq._error.descr[0] = 0;
-	sreq.data.updFlagMask = Blob::EnableAstCalCfgUpdNotif;
-	sreq.data.evtFlagMask = Blob::AstCalMinEvt;
-	sreq.data.astCfg.latitude = 40.0;
-	sreq.data.astCfg.longitude = -3.0;
-	sreq.data.astCfg.wdowDawnStart = -60;
-	sreq.data.astCfg.wdowDawnStop = 60;
-	sreq.data.astCfg.wdowDuskStart = -120;
-	sreq.data.astCfg.wdowDuskStop = 120;
-	sreq.data.astCfg.reductionStart = 100;
-	sreq.data.astCfg.reductionStop = 200;
-	strcpy(sreq.data.seasonCfg.envText, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
-
-	res = MQ::MQClient::publish("set/cfg/astcal", &sreq, sizeof(Blob::SetRequest_t<Blob::AstCalCfgData_t>), &s_published_cb);
+	char* msg = "{\"idTrans\":2,\"data\":{\"cfg\":{\"verbosity\":4},\"clock\":{\"cfg\":{\"periods\":[{\"uid\":13,\"since\":10,\"until\":20,\"enabled\":1}],\"geoloc\":{\"coords\":[40.2,-3.2]}}}}}";
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Request:\r\nto:set/cfg/astcal\r\nmsg:%s", msg);
+	res = MQ::MQClient::publish("set/cfg/astcal", msg, strlen(msg)+1, &s_published_cb);
 	TEST_ASSERT_EQUAL(res, MQ::SUCCESS);
 
 	// wait for response at least 10 seconds, yielding this thread
@@ -255,8 +177,42 @@ TEST_CASE("Blob support .........................", "[AstCalendar]"){
 		Thread::wait(100);
 		count += 0.1;
 	}while(!s_test_done && count < 10);
+	Thread::wait(1000);
 	TEST_ASSERT_TRUE(s_test_done);
 }
+
+
+//---------------------------------------------------------------------------
+/**
+ * @brief Se verifican las publicaciones y suscripciones JSON, para ello el módulo
+ * AstCalendar debe ser compilado con la opción ASTCAL_ENABLE_JSON_SUPPORT=1 o se debe
+ * activar dicha capacidad mediante AstCalendar::setJSONSupport(true)
+ */
+TEST_CASE("Set Config Data [full]................", "[AstCalendar]"){
+	MQ::ErrorResult res;
+	double count = 0;
+
+	// -----------------------------------------------
+	// borra flag de resultado
+	s_test_done = false;
+
+	// actualiza la configuración mediante un SetRequest
+	char* msg = "{\"idTrans\":2,\"data\":{\"cfg\":{\"updFlags\":1,\"evtFlags\":0,\"verbosity\":4},\"clock\":{\"cfg\":{\"periods\":[{\"since\":11,\"until\":21,\"enabled\":0},{\"since\":12,\"until\":22,\"enabled\":1},{\"since\":13,\"until\":23,\"enabled\":0},{\"since\":14,\"until\":24,\"enabled\":1},{\"since\":15,\"until\":25,\"enabled\":0},{\"since\":16,\"until\":26,\"enabled\":1},{\"since\":17,\"until\":27,\"enabled\":0},{\"since\":18,\"until\":28,\"enabled\":1}],\"geoloc\":{\"timezone\":\"GMT-1GMT-2,M3.5.0/2,M10.5.0\",\"coords\":[40.25,-3.25],\"astCorr\":[[1,11],[-2,-22],[3,33],[-4,-44],[5,55],[-6,-66],[7,77],[-8,-88]]}}}}}";
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Request:\r\nto:set/cfg/astcal\r\nmsg:%s", msg);
+	res = MQ::MQClient::publish("set/cfg/astcal", msg, strlen(msg)+1, &s_published_cb);
+	TEST_ASSERT_EQUAL(res, MQ::SUCCESS);
+
+	// wait for response at least 10 seconds, yielding this thread
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Wait 10secs to get a response...");
+	count = 0;
+	do{
+		Thread::wait(100);
+		count += 0.1;
+	}while(!s_test_done && count < 10);
+	Thread::wait(1000);
+	TEST_ASSERT_TRUE(s_test_done);
+}
+
 
 //------------------------------------------------------------------------------------
 //-- PREREQUISITES -------------------------------------------------------------------
@@ -275,65 +231,16 @@ static void publishedCb(const char* topic, int32_t result){
 
 //------------------------------------------------------------------------------------
 static void subscriptionCb(const char* topic, void* msg, uint16_t msg_len){
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibido topic %s con mensaje:", topic);
+	DEBUG_TRACE_D(_EXPR_, _MODULE_, "Recibido topic %s con mensaje:", topic);
 	cJSON* obj = cJSON_Parse(msg);
 	// Print JSON object
 	if(obj){
 		cJSON_Delete(obj);
-		DEBUG_TRACE_I(_EXPR_, _MODULE_, "%s", (char*)msg);
+		DEBUG_TRACE_D(_EXPR_, _MODULE_, "%s", (char*)msg);
 	}
 	// Decode depending on the topic
 	else{
-		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Formando objeto JSON a partir de objeto Blob...");
-		if(MQ::MQClient::isTokenRoot(topic, "stat/cfg")){
-			if(msg_len == sizeof(Blob::Response_t<Blob::AstCalCfgData_t>)){
-				cJSON* obj = JsonParser::getJsonFromResponse(*((Blob::Response_t<Blob::AstCalCfgData_t>*)msg));
-				if(obj){
-					char* sobj = cJSON_Print(obj);
-					cJSON_Delete(obj);
-					DEBUG_TRACE_I(_EXPR_, _MODULE_, "%s", sobj);
-					Heap::memFree(sobj);
-				}
-			}
-			else if(msg_len == sizeof(Blob::AstCalCfgData_t)){
-				cJSON* obj = JsonParser::getJsonFromObj(*((Blob::AstCalCfgData_t*)msg));
-				if(obj){
-					char* sobj = cJSON_Print(obj);
-					cJSON_Delete(obj);
-					DEBUG_TRACE_I(_EXPR_, _MODULE_, "%s", sobj);
-					Heap::memFree(sobj);
-				}
-			}
-
-		}
-		else if(MQ::MQClient::isTokenRoot(topic, "stat/value")){
-			if(msg_len == sizeof(Blob::AstCalStatData_t)){
-				cJSON* obj = JsonParser::getJsonFromObj(*((Blob::AstCalStatData_t*)msg));
-				if(obj){
-					char* sobj = cJSON_Print(obj);
-					cJSON_Delete(obj);
-					DEBUG_TRACE_I(_EXPR_, _MODULE_, "%s", sobj);
-					Heap::memFree(sobj);
-				}
-			}
-		}
-		else if(MQ::MQClient::isTokenRoot(topic, "stat/boot")){
-			if(msg_len == sizeof(Blob::AstCalBootData_t)){
-				Blob::AstCalBootData_t* boot = (Blob::AstCalBootData_t*)msg;
-				cJSON* obj = JsonParser::getJsonFromObj(*((Blob::AstCalBootData_t*)msg));
-				if(obj){
-					char* sobj = cJSON_Print(obj);
-					cJSON_Delete(obj);
-					DEBUG_TRACE_I(_EXPR_, _MODULE_, "%s", sobj);
-					Heap::memFree(sobj);
-				}
-			}
-		}
-		else{
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Error procesando mensaje en topic %s", topic);
-			s_test_done = false;
-			return;
-		}
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "Error procesando mensaje en topic %s", topic);
 	}
 	s_test_done = true;
 }

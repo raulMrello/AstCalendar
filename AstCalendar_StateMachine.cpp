@@ -55,11 +55,11 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 
         // Procesa datos recibidos de la publicación en cmd/$BASE/cfg/set
         case RecvCfgSet:{
-        	Blob::SetRequest_t<Blob::AstCalCfgData_t>* req = (Blob::SetRequest_t<Blob::AstCalCfgData_t>*)st_msg->msg;
-        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nueva configuración keys=%x", req->keys);
+        	Blob::SetRequest_t<calendar_manager>* req = (Blob::SetRequest_t<calendar_manager>*)st_msg->msg;
+        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nueva configuración");
 			// si no hay errores, actualiza la configuración
 			if(req->_error.code == Blob::ErrOK){
-				_updateConfig(req->data, req->keys, req->_error);
+				_updateConfig(req->data, req->_error);
 			}
         	// si hay errores en el mensaje o en la actualización, devuelve resultado sin hacer nada
         	if(req->_error.code != Blob::ErrOK){
@@ -68,10 +68,10 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				MBED_ASSERT(pub_topic);
 				sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);
 
-				Blob::Response_t<Blob::AstCalCfgData_t>* resp = new Blob::Response_t<Blob::AstCalCfgData_t>(req->idTrans, req->_error, _astdata.cfg);
+				Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
 
 				if(_json_supported){
-					cJSON* jresp = JsonParser::getJsonFromResponse(*resp);
+					cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
 					if(jresp){
 						char* jmsg = cJSON_Print(jresp);
 						cJSON_Delete(jresp);
@@ -83,7 +83,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 					}
 				}
 
-				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<Blob::AstCalCfgData_t>), &_publicationCb);
+				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
 				delete(resp);
 				Heap::memFree(pub_topic);
 				return State::HANDLED;
@@ -94,15 +94,16 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Config actualizada");
 
         	// si está habilitada la notificación de actualización, lo notifica
-        	if((_astdata.cfg.updFlagMask & Blob::EnableAstCalCfgUpdNotif) != 0){
+        	if((_astdata.cfg.updFlags & CalendarManagerCfgUpdNotif) != 0){
+        		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Notificando actualización");
 				char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 				MBED_ASSERT(pub_topic);
 				sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);
 
-				Blob::Response_t<Blob::AstCalCfgData_t>* resp = new Blob::Response_t<Blob::AstCalCfgData_t>(req->idTrans, req->_error, _astdata.cfg);
-
+				Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
+				MBED_ASSERT(resp);
 				if(_json_supported){
-					cJSON* jresp = JsonParser::getJsonFromResponse(*resp);
+					cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
 					if(jresp){
 						char* jmsg = cJSON_Print(jresp);
 						cJSON_Delete(jresp);
@@ -112,10 +113,15 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 						Heap::memFree(pub_topic);
 						return State::HANDLED;
 					}
+					else{
+						DEBUG_TRACE_E(_EXPR_, _MODULE_, "Error on getJsonFromResponse <%s>", resp->error.descr);
+						delete(resp);
+					}
 				}
-
-				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<Blob::AstCalCfgData_t>), &_publicationCb);
-				delete(resp);
+				else{
+					MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
+					delete(resp);
+				}
 				Heap::memFree(pub_topic);
         	}
 
@@ -131,10 +137,10 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);
 
 			// responde con los datos solicitados y con los errores (si hubiera) de la decodificación de la solicitud
-			Blob::Response_t<Blob::AstCalCfgData_t>* resp = new Blob::Response_t<Blob::AstCalCfgData_t>(req->idTrans, req->_error, _astdata.cfg);
+			Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
 
 			if(_json_supported){
-				cJSON* jresp = JsonParser::getJsonFromResponse(*resp);
+				cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
 				if(jresp){
 					char* jmsg = cJSON_Print(jresp);
 					cJSON_Delete(jresp);
@@ -146,7 +152,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				}
 			}
 
-			MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<Blob::AstCalCfgData_t>), &_publicationCb);
+			MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
 			delete(resp);
 
         	// libera la memoria asignada al topic de publicación
@@ -161,15 +167,10 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 			MBED_ASSERT(pub_topic);
 			sprintf(pub_topic, "stat/boot/%s", _pub_topic_base);
-			_astdata.stat.flags = Blob::AstCalNoEvents;
-			_astdata.stat.now = time(NULL);
-			_astdata.stat.period = 0;
-			// clono la configuración en la variable de estado a devolver
-			_astdata.stat.astData = _astdata.cfg.astCfg;
-			Blob::NotificationData_t<Blob::AstCalBootData_t> *notif = new Blob::NotificationData_t<Blob::AstCalBootData_t>(_astdata);
+			Blob::NotificationData_t<calendar_manager> *notif = new Blob::NotificationData_t<calendar_manager>(_astdata);
 			MBED_ASSERT(notif);
 			if(_json_supported){
-				cJSON* jboot = JsonParser::getJsonFromNotification(*notif);
+				cJSON* jboot = JsonParser::getJsonFromNotification(*notif, ObjSelectAll);
 				if(jboot){
 					char* jmsg = cJSON_Print(jboot);
 					cJSON_Delete(jboot);
@@ -181,7 +182,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				}
 			}
 
-			MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<Blob::AstCalBootData_t>), &_publicationCb);
+			MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<calendar_manager>), &_publicationCb);
 			Heap::memFree(pub_topic);
 			delete(notif);
             return State::HANDLED;

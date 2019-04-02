@@ -23,10 +23,10 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
     if(MQ::MQClient::isTokenRoot(topic, "set/cfg")){
         DEBUG_TRACE_D(_EXPR_, _MODULE_, "Recibido topic %s", topic);
 
-        Blob::SetRequest_t<Blob::AstCalCfgData_t>* req = NULL;
+        Blob::SetRequest_t<calendar_manager>* req = NULL;
         bool json_decoded = false;
 		if(_json_supported){
-			req = (Blob::SetRequest_t<Blob::AstCalCfgData_t>*)Heap::memAlloc(sizeof(Blob::SetRequest_t<Blob::AstCalCfgData_t>));
+			req = (Blob::SetRequest_t<calendar_manager>*)Heap::memAlloc(sizeof(Blob::SetRequest_t<calendar_manager>));
 			MBED_ASSERT(req);
 			if(!(json_decoded = JsonParser::getSetRequestFromJson(*req, (char*)msg))){
 				Heap::memFree(req);
@@ -34,7 +34,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 		}
 
         // Antes de nada, chequea que el tamaño de la zona horaria es correcto, en caso contrario, descarta el topic
-        if(!json_decoded && msg_len != sizeof(Blob::SetRequest_t<Blob::AstCalCfgData_t>)){
+        if(!json_decoded && msg_len != sizeof(Blob::SetRequest_t<calendar_manager>)){
         	DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_MSG. Error en el nº de datos del mensaje, topic [%s]", topic);
 			return;
         }
@@ -45,9 +45,9 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 
         // el mensaje es un blob tipo Blob::LightCfgData_t
         if(!json_decoded){
-        	req = (Blob::SetRequest_t<Blob::AstCalCfgData_t>*)Heap::memAlloc(sizeof(Blob::SetRequest_t<Blob::AstCalCfgData_t>));
+        	req = (Blob::SetRequest_t<calendar_manager>*)Heap::memAlloc(sizeof(Blob::SetRequest_t<calendar_manager>));
         	MBED_ASSERT(req);
-        	*req = *((Blob::SetRequest_t<Blob::AstCalCfgData_t>*)msg);
+        	*req = *((Blob::SetRequest_t<calendar_manager>*)msg);
         }
         op->sig = RecvCfgSet;
 		// apunta a los datos
