@@ -37,7 +37,7 @@ void AstCalendar::restoreConfig(){
 	if(success){
 
 		// chequea el crc
-		uint8_t* crc_buf = (char*)malloc(sizeof(calendar_manager_cfg) + sizeof(calendar_clock_cfg));
+		uint8_t* crc_buf = (char*)Heap::memAlloc(sizeof(calendar_manager_cfg) + sizeof(calendar_clock_cfg));
 		MBED_ASSERT(crc_buf);
 		memcpy(crc_buf, &_astdata.cfg, sizeof(calendar_manager_cfg));
 		memcpy(&crc_buf[sizeof(calendar_manager_cfg)], &_astdata.clock.cfg, sizeof(calendar_clock_cfg));
@@ -156,7 +156,7 @@ void AstCalendar::setDefaultConfig(){
 	_astdata.cfg.verbosity = ESP_LOG_DEBUG;
 
 	// establezco configuración por defecto del reloj integrado (para Madrid)
-	strcpy(_astdata.clock.cfg.geoloc.timezone, "GMT-1GMT-2,M3.5.0/2,M10.5.0");
+	strncpy(_astdata.clock.cfg.geoloc.timezone, "GMT-1GMT-2,M3.5.0/2,M10.5.0", CalendarGeolocTimezoneLength);
 	_astdata.clock.cfg.geoloc.coords[0] = 40.416500;
 	_astdata.clock.cfg.geoloc.coords[1] = -3.702560;
 	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
@@ -187,7 +187,7 @@ void AstCalendar::saveConfig(){
 	}
 
 	// genera el crc
-	uint8_t* crc_buf = (char*)malloc(sizeof(calendar_manager_cfg) + sizeof(calendar_clock_cfg));
+	uint8_t* crc_buf = (char*)Heap::memAlloc(sizeof(calendar_manager_cfg) + sizeof(calendar_clock_cfg));
 	MBED_ASSERT(crc_buf);
 	memcpy(crc_buf, &_astdata.cfg, sizeof(calendar_manager_cfg));
 	memcpy(&crc_buf[sizeof(calendar_manager_cfg)], &_astdata.clock.cfg, sizeof(calendar_clock_cfg));

@@ -51,7 +51,7 @@ TEST_CASE("Test Obj->Json->Obj from Whole Obj........................", "[calend
 	// Conversión Obj -> JSON
 	cJSON* json = JsonParser::getJsonFromObj(obj, ObjSelectAll);
 	TEST_ASSERT_NOT_NULL(json);
-	char* json_msg = cJSON_Print(json);
+	char* json_msg = cJSON_PrintUnformatted(json);
 	TEST_ASSERT_NOT_NULL(json_msg);
 	cJSON_Delete(json);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "%s", json_msg);
@@ -60,7 +60,7 @@ TEST_CASE("Test Obj->Json->Obj from Whole Obj........................", "[calend
 	JsonParser::getObjFromJson(obj_back, json_msg);
 	json = JsonParser::getJsonFromObj(obj_back, ObjSelectAll);
 	TEST_ASSERT_NOT_NULL(json);
-	char* json_msg_2 = cJSON_Print(json);
+	char* json_msg_2 = cJSON_PrintUnformatted(json);
 	TEST_ASSERT_NOT_NULL(json_msg_2);
 	cJSON_Delete(json);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Obj_back = %s", json_msg_2);
@@ -88,7 +88,7 @@ TEST_CASE("Test Obj->Json->Obj from State Obj........................", "[calend
 	// Conversión Obj -> JSON
 	cJSON* json = JsonParser::getJsonFromObj(obj, ObjSelectState);
 	TEST_ASSERT_NOT_NULL(json);
-	char* json_msg = cJSON_Print(json);
+	char* json_msg = cJSON_PrintUnformatted(json);
 	TEST_ASSERT_NOT_NULL(json_msg);
 	cJSON_Delete(json);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "%s", json_msg);
@@ -97,7 +97,7 @@ TEST_CASE("Test Obj->Json->Obj from State Obj........................", "[calend
 	JsonParser::getObjFromJson(obj_back, json_msg);
 	json = JsonParser::getJsonFromObj(obj_back, ObjSelectState);
 	TEST_ASSERT_NOT_NULL(json);
-	char* json_msg_2 = cJSON_Print(json);
+	char* json_msg_2 = cJSON_PrintUnformatted(json);
 	TEST_ASSERT_NOT_NULL(json_msg_2);
 	cJSON_Delete(json);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Obj_back = %s", json_msg_2);
@@ -125,7 +125,7 @@ TEST_CASE("Test Obj->Json->Obj from Config Obj.......................", "[calend
 	// Conversión Obj -> JSON
 	cJSON* json = JsonParser::getJsonFromObj(obj, ObjSelectCfg);
 	TEST_ASSERT_NOT_NULL(json);
-	char* json_msg = cJSON_Print(json);
+	char* json_msg = cJSON_PrintUnformatted(json);
 	TEST_ASSERT_NOT_NULL(json_msg);
 	cJSON_Delete(json);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "%s", json_msg);
@@ -134,7 +134,7 @@ TEST_CASE("Test Obj->Json->Obj from Config Obj.......................", "[calend
 	JsonParser::getObjFromJson(obj_back, json_msg);
 	json = JsonParser::getJsonFromObj(obj_back, ObjSelectCfg);
 	TEST_ASSERT_NOT_NULL(json);
-	char* json_msg_2 = cJSON_Print(json);
+	char* json_msg_2 = cJSON_PrintUnformatted(json);
 	TEST_ASSERT_NOT_NULL(json_msg_2);
 	cJSON_Delete(json);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Obj_back = %s", json_msg_2);

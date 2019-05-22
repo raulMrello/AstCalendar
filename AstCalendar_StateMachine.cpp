@@ -73,11 +73,16 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				if(_json_supported){
 					cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
 					if(jresp){
-						char* jmsg = cJSON_Print(jresp);
+						char* jmsg = cJSON_PrintUnformatted(jresp);
 						cJSON_Delete(jresp);
 						MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
 						Heap::memFree(jmsg);
 						delete(resp);
+						Heap::memFree(pub_topic);
+						return State::HANDLED;
+					}
+					else{
+						DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR al formar Blob::Response_t<calendar_manager>");
 						Heap::memFree(pub_topic);
 						return State::HANDLED;
 					}
@@ -105,7 +110,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				if(_json_supported){
 					cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
 					if(jresp){
-						char* jmsg = cJSON_Print(jresp);
+						char* jmsg = cJSON_PrintUnformatted(jresp);
 						cJSON_Delete(jresp);
 						MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
 						Heap::memFree(jmsg);
@@ -116,6 +121,8 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 					else{
 						DEBUG_TRACE_E(_EXPR_, _MODULE_, "Error on getJsonFromResponse <%s>", resp->error.descr);
 						delete(resp);
+						Heap::memFree(pub_topic);
+						return State::HANDLED;
 					}
 				}
 				else{
@@ -138,14 +145,20 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 
 			// responde con los datos solicitados y con los errores (si hubiera) de la decodificación de la solicitud
 			Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
-
+			MBED_ASSERT(resp);
 			if(_json_supported){
 				cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
 				if(jresp){
-					char* jmsg = cJSON_Print(jresp);
+					char* jmsg = cJSON_PrintUnformatted(jresp);
 					cJSON_Delete(jresp);
 					MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
 					Heap::memFree(jmsg);
+					delete(resp);
+					Heap::memFree(pub_topic);
+					return State::HANDLED;
+				}
+				else{
+					DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR al formar Blob::NotificationData_t<calendar_manager>");
 					delete(resp);
 					Heap::memFree(pub_topic);
 					return State::HANDLED;
@@ -170,12 +183,18 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			Blob::NotificationData_t<calendar_manager> *notif = new Blob::NotificationData_t<calendar_manager>(_astdata);
 			MBED_ASSERT(notif);
 			if(_json_supported){
-				cJSON* jboot = JsonParser::getJsonFromNotification(*notif, ObjSelectAll);
+				cJSON* jboot = JsonParser::getJsonFromNotification<calendar_manager>(*notif, ObjSelectAll);
 				if(jboot){
-					char* jmsg = cJSON_Print(jboot);
+					char* jmsg = cJSON_PrintUnformatted(jboot);
 					cJSON_Delete(jboot);
 					MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
 					Heap::memFree(jmsg);
+					Heap::memFree(pub_topic);
+					delete(notif);
+					return State::HANDLED;
+				}
+				else{
+					DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR al formar Blob::NotificationData_t<calendar_manager>");
 					Heap::memFree(pub_topic);
 					delete(notif);
 					return State::HANDLED;
