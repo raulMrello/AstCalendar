@@ -25,6 +25,7 @@ cJSON* getJsonFromCalendarManager(const calendar_manager& obj, ObjDataSelection 
 	cJSON* json = NULL;
 	cJSON* item = NULL;
 	if((json=cJSON_CreateObject()) == NULL){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarManager cJSON_CreateObject json = null");
 		return NULL;
 	}
 
@@ -36,6 +37,7 @@ cJSON* getJsonFromCalendarManager(const calendar_manager& obj, ObjDataSelection 
 		cJSON* cfg = NULL;
 		if((cfg=cJSON_CreateObject()) == NULL){
 			cJSON_Delete(json);
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarManager cJSON_CreateObject cfg = null");
 			return NULL;
 		}
 		cJSON_AddNumberToObject(cfg, JsonParser::p_updFlags, obj.cfg.updFlags);
@@ -47,6 +49,7 @@ cJSON* getJsonFromCalendarManager(const calendar_manager& obj, ObjDataSelection 
 	// clock
 	if((item = getJsonFromCalendarClock(obj.clock, type)) == NULL){
 		cJSON_Delete(json);
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarManager getJsonFromCalendarClock");
 		return NULL;
 	}
 	cJSON_AddItemToObject(json, JsonParser::p_clock, item);
@@ -59,6 +62,7 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 	cJSON* json = NULL;
 	cJSON* item = NULL;
 	if((json=cJSON_CreateObject()) == NULL){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarClock cJSON_CreateObject json = null");
 		return NULL;
 	}
 
@@ -77,7 +81,7 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 		if((item = getJsonFromCalendarClockCfg(obj.cfg)) == NULL){
 			cJSON_Delete(cfg);
 			cJSON_Delete(json);
-			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock.cfg = null");
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarClock getJsonFromCalendarClockCfg");
 			return NULL;
 		}
 		cJSON_AddItemToObject(json, JsonParser::p_cfg, item);
@@ -88,6 +92,7 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 		cJSON* stat = NULL;
 		if((stat=cJSON_CreateObject()) == NULL){
 			cJSON_Delete(json);
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarClock cJSON_CreateObject stat = null");
 			return NULL;
 		}
 		cJSON_AddNumberToObject(stat, JsonParser::p_flags, obj.stat.flags);
@@ -109,6 +114,7 @@ cJSON* getJsonFromCalendarClockCfg(const calendar_clock_cfg& obj){
 	cJSON* json = NULL;
 	cJSON* item = NULL;
 	if((json=cJSON_CreateObject()) == NULL){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarClockCfg cJSON_CreateObject json = null");
 		return NULL;
 	}
 
@@ -146,6 +152,7 @@ cJSON* getJsonFromCalendarClockCfg(const calendar_clock_cfg& obj){
 cJSON* getJsonFromCalendarPeriod(const calendar_period& obj){
 	cJSON* json = NULL;
 	if((json=cJSON_CreateObject()) == NULL){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarPeriod cJSON_CreateObject json = null");
 		return NULL;
 	}
 
@@ -166,6 +173,7 @@ cJSON* getJsonFromCalendarPeriod(const calendar_period& obj){
 cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 	cJSON* json = NULL;
 	if((json=cJSON_CreateObject()) == NULL){
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarGeoloc cJSON_CreateObject json = null");
 		return NULL;
 	}
 
@@ -179,6 +187,7 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 	cJSON* array = NULL;
 	if((array=cJSON_CreateArray()) == NULL){
 		cJSON_Delete(json);
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarGeoloc cJSON_CreateObject array coords = null");
 		return NULL;
 	}
 	for(int i=0;i<2;i++){
@@ -186,6 +195,7 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 		if((item = cJSON_CreateNumber(obj.coords[i])) == NULL){
 			cJSON_Delete(array);
 			cJSON_Delete(json);
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarGeoloc cJSON_CreateObject item = null");
 			return NULL;
 		}
 		cJSON_AddItemToArray(array, item);
@@ -195,6 +205,7 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 	// astCorr
 	if((array=cJSON_CreateArray()) == NULL){
 		cJSON_Delete(json);
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarGeoloc cJSON_CreateObject array astCorr = null");
 		return NULL;
 	}
 	for(int i=0;i<CalendarClockCfgMaxNumPeriods;i++){
@@ -202,6 +213,7 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 		if((array2=cJSON_CreateArray()) == NULL){
 			cJSON_Delete(array);
 			cJSON_Delete(json);
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarGeoloc cJSON_CreateObject array periods = null");
 			return NULL;
 		}
 		for(int j=0;j<2;j++){
@@ -210,6 +222,7 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 				cJSON_Delete(array2);
 				cJSON_Delete(array);
 				cJSON_Delete(json);
+				DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarGeoloc cJSON_CreateObject item periods = null");
 				return NULL;
 			}
 			cJSON_AddItemToArray(array2, item);
