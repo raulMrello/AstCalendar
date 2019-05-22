@@ -128,7 +128,7 @@ TEST_CASE("Get Config Data.......................", "[AstCalendar]"){
 	TEST_ASSERT_NOT_NULL(greq);
 	cJSON* jreq = JsonParser::getJsonFromObj(*greq);
 	TEST_ASSERT_NOT_NULL(jreq);
-	msg = cJSON_Print(jreq);
+	msg = cJSON_PrintUnformatted(jreq);
 	TEST_ASSERT_NOT_NULL(msg);
 	cJSON_Delete(jreq);
 	delete(greq);
