@@ -28,7 +28,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 		if(_json_supported){
 			req = (Blob::SetRequest_t<calendar_manager>*)Heap::memAlloc(sizeof(Blob::SetRequest_t<calendar_manager>));
 			MBED_ASSERT(req);
-			if(!(json_decoded = JsonParser::getSetRequestFromJson(*req, (char*)msg))){
+			if(!(json_decoded = JsonParser::getSetRequestFromJson(*req, (cJSON*)msg))){
 				Heap::memFree(req);
 			}
 		}
@@ -72,7 +72,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
         if(_json_supported){
 			req = (Blob::GetRequest_t*)Heap::memAlloc(sizeof(Blob::GetRequest_t));
 			MBED_ASSERT(req);
-			if(!(json_decoded = JsonParser::getGetRequestFromJson(*req, (char*)msg))){
+			if(!(json_decoded = JsonParser::getGetRequestFromJson(*req, (cJSON*)msg))){
 				Heap::memFree(req);
 			}
         }

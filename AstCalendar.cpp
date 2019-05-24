@@ -131,23 +131,13 @@ void AstCalendar::eventSimulatorCb() {
 
 		if(_json_supported){
 			cJSON* jstat = JsonParser::getJsonFromNotification(*notif, ObjSelectAll);
-			if(jstat){
-				char* jmsg = cJSON_PrintUnformatted(jstat);
-				cJSON_Delete(jstat);
-				MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
-				Heap::memFree(jmsg);
-				Heap::memFree(pub_topic);
-				delete(notif);
-				return;
-			}
-			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR al formar Blob::NotificationData_t<calendar_manager>");
-			Heap::memFree(pub_topic);
-			delete(notif);
-			return;
+			MBED_ASSERT(jstat);
+			MQ::MQClient::publish(pub_topic, jstat, sizeof(cJSON*), &_publicationCb);
+			cJSON_Delete(jstat);
 		}
-
-		// publica estado
-		MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<calendar_manager>), &_publicationCb);
+		else {
+			MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<calendar_manager>), &_publicationCb);
+		}
 		Heap::memFree(pub_topic);
 		delete(notif);
 	}

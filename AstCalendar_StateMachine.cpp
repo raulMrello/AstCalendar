@@ -69,26 +69,16 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);
 
 				Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
-
+				MBED_ASSERT(resp);
 				if(_json_supported){
 					cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
-					if(jresp){
-						char* jmsg = cJSON_PrintUnformatted(jresp);
-						cJSON_Delete(jresp);
-						MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
-						Heap::memFree(jmsg);
-						delete(resp);
-						Heap::memFree(pub_topic);
-						return State::HANDLED;
-					}
-					else{
-						DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR al formar Blob::Response_t<calendar_manager>");
-						Heap::memFree(pub_topic);
-						return State::HANDLED;
-					}
+					MBED_ASSERT(jresp);
+					MQ::MQClient::publish(pub_topic, jresp, sizeof(cJSON*), &_publicationCb);
+					cJSON_Delete(jresp);
 				}
-
-				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
+				else{
+					MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
+				}
 				delete(resp);
 				Heap::memFree(pub_topic);
 				return State::HANDLED;
@@ -109,27 +99,16 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				MBED_ASSERT(resp);
 				if(_json_supported){
 					cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
-					if(jresp){
-						char* jmsg = cJSON_PrintUnformatted(jresp);
-						cJSON_Delete(jresp);
-						MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
-						Heap::memFree(jmsg);
-						delete(resp);
-						Heap::memFree(pub_topic);
-						return State::HANDLED;
-					}
-					else{
-						DEBUG_TRACE_E(_EXPR_, _MODULE_, "Error on getJsonFromResponse <%s>", resp->error.descr);
-						delete(resp);
-						Heap::memFree(pub_topic);
-						return State::HANDLED;
-					}
+					MBED_ASSERT(jresp);
+					MQ::MQClient::publish(pub_topic, jresp, sizeof(cJSON*), &_publicationCb);
+					cJSON_Delete(jresp);
 				}
 				else{
 					MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
-					delete(resp);
 				}
+				delete(resp);
 				Heap::memFree(pub_topic);
+				return State::HANDLED;
         	}
 
             return State::HANDLED;
@@ -148,31 +127,16 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			MBED_ASSERT(resp);
 			if(_json_supported){
 				cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectCfg);
-				if(jresp){
-					char* jmsg = cJSON_PrintUnformatted(jresp);
-					cJSON_Delete(jresp);
-					MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
-					Heap::memFree(jmsg);
-					delete(resp);
-					Heap::memFree(pub_topic);
-					return State::HANDLED;
-				}
-				else{
-					DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR al formar Blob::NotificationData_t<calendar_manager>");
-					delete(resp);
-					Heap::memFree(pub_topic);
-					return State::HANDLED;
-				}
+				MBED_ASSERT(jresp);
+				MQ::MQClient::publish(pub_topic, jresp, sizeof(cJSON*), &_publicationCb);
+				cJSON_Delete(jresp);
 			}
-
-			MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
+			else{
+				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
+			}
 			delete(resp);
-
-        	// libera la memoria asignada al topic de publicación
 			Heap::memFree(pub_topic);
-
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Enviada respuesta con la configuracion solicitada");
-            return State::HANDLED;
+			return State::HANDLED;
         }
 
         // Procesa datos recibidos de la publicación en get/boot
@@ -184,27 +148,16 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			MBED_ASSERT(notif);
 			if(_json_supported){
 				cJSON* jboot = JsonParser::getJsonFromNotification<calendar_manager>(*notif, ObjSelectAll);
-				if(jboot){
-					char* jmsg = cJSON_PrintUnformatted(jboot);
-					cJSON_Delete(jboot);
-					MQ::MQClient::publish(pub_topic, jmsg, strlen(jmsg)+1, &_publicationCb);
-					Heap::memFree(jmsg);
-					Heap::memFree(pub_topic);
-					delete(notif);
-					return State::HANDLED;
-				}
-				else{
-					DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR al formar Blob::NotificationData_t<calendar_manager>");
-					Heap::memFree(pub_topic);
-					delete(notif);
-					return State::HANDLED;
-				}
+				MBED_ASSERT(jboot);
+				MQ::MQClient::publish(pub_topic, jboot, sizeof(cJSON*), &_publicationCb);
+				cJSON_Delete(jboot);
 			}
-
-			MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<calendar_manager>), &_publicationCb);
-			Heap::memFree(pub_topic);
+			else {
+				MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<calendar_manager>), &_publicationCb);
+			}
 			delete(notif);
-            return State::HANDLED;
+			Heap::memFree(pub_topic);
+			return State::HANDLED;
         }
         case State::EV_EXIT:{
             nextState();
