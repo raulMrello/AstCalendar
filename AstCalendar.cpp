@@ -132,7 +132,7 @@ void AstCalendar::eventSimulatorCb() {
 		if(_json_supported){
 			cJSON* jstat = JsonParser::getJsonFromNotification(*notif, ObjSelectAll);
 			MBED_ASSERT(jstat);
-			MQ::MQClient::publish(pub_topic, jstat, sizeof(cJSON*), &_publicationCb);
+			MQ::MQClient::publish(pub_topic, &jstat, sizeof(cJSON**), &_publicationCb);
 			cJSON_Delete(jstat);
 		}
 		else {

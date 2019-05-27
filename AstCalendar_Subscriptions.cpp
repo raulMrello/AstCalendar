@@ -18,7 +18,6 @@ static const char* _MODULE_ = "[AstCal]........";
 
 //------------------------------------------------------------------------------------
 void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len){
-
     // si es un comando para actualizar en bloque toda la configuración...
     if(MQ::MQClient::isTokenRoot(topic, "set/cfg")){
         DEBUG_TRACE_D(_EXPR_, _MODULE_, "Recibido topic %s", topic);
@@ -28,7 +27,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 		if(_json_supported){
 			req = (Blob::SetRequest_t<calendar_manager>*)Heap::memAlloc(sizeof(Blob::SetRequest_t<calendar_manager>));
 			MBED_ASSERT(req);
-			if(!(json_decoded = JsonParser::getSetRequestFromJson(*req, (cJSON*)msg))){
+			if(!(json_decoded = JsonParser::getSetRequestFromJson(*req, *(cJSON**)msg))){
 				Heap::memFree(req);
 			}
 		}
@@ -72,7 +71,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
         if(_json_supported){
 			req = (Blob::GetRequest_t*)Heap::memAlloc(sizeof(Blob::GetRequest_t));
 			MBED_ASSERT(req);
-			if(!(json_decoded = JsonParser::getGetRequestFromJson(*req, (cJSON*)msg))){
+			if(!(json_decoded = JsonParser::getGetRequestFromJson(*req, *(cJSON**)msg))){
 				Heap::memFree(req);
 			}
         }
