@@ -21,7 +21,7 @@ static const char* _MODULE_ = "[AstCal]........";
 
 
 //------------------------------------------------------------------------------------
-AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", osPriorityNormal, 3096, fs, defdbg) {
+AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", osPriorityNormal, 3072, fs, defdbg) {
 
 	// Establece el soporte de JSON
 	_json_supported = false;
@@ -36,7 +36,7 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", os
     	esp_log_level_set(_MODULE_, ESP_LOG_WARN);
     }
 
-	// Carga callbacks estáticas de publicación/suscripción
+	// Carga callbacks estï¿½ticas de publicaciï¿½n/suscripciï¿½n
     _publicationCb = callback(this, &AstCalendar::publicationCb);
     _rtc = NULL;
 	_sim_tmr = new RtosTimer(callback(this, &AstCalendar::eventSimulatorCb), osTimerPeriodic, "AstCalSimTmr");
