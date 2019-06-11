@@ -1,7 +1,7 @@
 /*
  * ppl_energy_objects.cpp
  *
- * Implementación de los codecs JSON-OBJ
+ * Implementaciï¿½n de los codecs JSON-OBJ
  *
  *  Created on: Feb 2019
  *      Author: raulMrello
@@ -71,15 +71,7 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 
 	// cfg
 	if(type != ObjSelectState){
-		cJSON* cfg = NULL;
-		if((cfg=cJSON_CreateObject()) == NULL){
-			cJSON_Delete(json);
-			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock.cfg = null");
-			return NULL;
-		}
-
 		if((item = getJsonFromCalendarClockCfg(obj.cfg)) == NULL){
-			cJSON_Delete(cfg);
 			cJSON_Delete(json);
 			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarClock getJsonFromCalendarClockCfg");
 			return NULL;
@@ -96,7 +88,7 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 			return NULL;
 		}
 		cJSON_AddNumberToObject(stat, JsonParser::p_flags, obj.stat.flags);
-		// sólo incluye <period> si tiene un valor válido >=0
+		// sï¿½lo incluye <period> si tiene un valor vï¿½lido >=0
 		if(obj.stat.period >= 0){
 			cJSON_AddNumberToObject(stat, JsonParser::p_period, obj.stat.period);
 		}
@@ -305,7 +297,7 @@ uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_flags)) != NULL){
 			obj.stat.flags = value->valueint;
 		}
-		// si el periodo no está presente, lo marca como inválido (=-1)
+		// si el periodo no estï¿½ presente, lo marca como invï¿½lido (=-1)
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_period)) != NULL){
 			obj.stat.period = value->valueint;
 		}
