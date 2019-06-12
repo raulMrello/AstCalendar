@@ -15,27 +15,28 @@
 #include "common_objects.h"
 #include "cJSON.h"
 
-
-/** UIDs */
-#define UID_CALENDAR_MANAGER(vers)				(uint32_t)(0x0000000B | ((uint32_t)vers << 20))
-#define UID_CALENDAR_CLOCK(vers)				(uint32_t)(0x0000000C | ((uint32_t)vers << 20))
-#define UID_CALENDAR_PERIOD(vers)				(uint32_t)(0x0000000D | ((uint32_t)vers << 20))
-#define UID_CALENDAR_GEOLOC(vers)				(uint32_t)(0x0000000E | ((uint32_t)vers << 20))
-
-/** Versiones */
-#define VERS_CALENDAR_DEFAULT		0
-#define VERS_CALENDAR_NAME_0		""
-
-#define VERS_CALENDAR_CURRENT		VERS_CALENDAR_DEFAULT
+/** Versiones soportadas */
+#define VERS_CALENDAR_INTERNAL			0
+#define VERS_CALENDAR_INTERNAL_NAME	(const char*)""
 
 
+/** Selección de la versión utilizada 	*/
+/** DEFINIR SEGÚN APLICACIÓN 			*/
+#define VERS_CALENDAR_SELECTED		VERS_CALENDAR_INTERNAL /*others...*/
 
-static inline const char* VERS_CALENDAR_NAME(int vers){
-	switch(vers){
-		case VERS_CALENDAR_DEFAULT:		return VERS_CALENDAR_NAME_0;
+
+/** Macro de generación de UIDs*/
+#define UID_CALENDAR_MANAGER		(uint32_t)(0x00000003 | ((uint32_t)VERS_CALENDAR_SELECTED << 20))
+#define UID_CALENDAR_CLOCK			(uint32_t)(0x00000004 | ((uint32_t)VERS_CALENDAR_SELECTED << 20))
+
+/** Macro de generación de nombre de versión */
+static inline const char* VERS_CALENDAR_NAME(){
+	switch(VERS_CALENDAR_SELECTED){
+		case VERS_CALENDAR_INTERNAL:	return VERS_CALENDAR_INTERNAL_NAME;
 		default: 						return "";
 	}
 }
+
 
 
 /** Flags para la variable calendar:manager/cfg.updFlags */
@@ -89,27 +90,19 @@ static const double CalendarGeolocLongitudeMax =  180;
 
 /**Objeto calendar:geoloc */
 struct calendar_geoloc{
-	uint32_t uid;
 	double 	 coords[2];
 	char   	 timezone[CalendarGeolocTimezoneLength];
 	time_t 	 astCorr[CalendarClockCfgMaxNumPeriods][2];
 	uint8_t _numPeriods;
 	uint32_t _keys;
-	void setVersion(uint32_t vers){
-		uid = UID_CALENDAR_GEOLOC(vers);
-	}
 };
 
 
 /**Objeto calendar:period */
 struct calendar_period{
-	uint32_t uid;
 	time_t   since;
 	time_t   until;
 	bool     enabled;
-	void setVersion(uint32_t vers){
-		uid = UID_CALENDAR_PERIOD(vers);
-	}
 };
 
 
@@ -138,13 +131,6 @@ struct calendar_clock{
 	calendar_clock_cfg  cfg;
 	calendar_clock_stat stat;
 	uint32_t _keys;
-	void setVersion(uint32_t vers){
-		uid = UID_CALENDAR_CLOCK(vers);
-		cfg.geoloc.setVersion(vers);
-		for(int i=0; i<CalendarClockCfgMaxNumPeriods; i++){
-			cfg.periods[i].setVersion(vers);
-		}
-	}
 };
 
 
@@ -163,10 +149,6 @@ struct calendar_manager{
 	calendar_manager_cfg cfg;
 	calendar_clock clock;
 	uint32_t _keys;
-	void setVersion(uint32_t vers){
-		uid = UID_CALENDAR_MANAGER(vers);
-		clock.setVersion(vers);
-	}
 };
 
 

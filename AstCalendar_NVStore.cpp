@@ -148,7 +148,8 @@ void AstCalendar::setDefaultConfig(){
 	_astdata = {0};
 
 	// establezco versión del modelo de datos
-	_astdata.setVersion(VERS_CALENDAR_CURRENT);
+	_astdata.uid = UID_CALENDAR_MANAGER;
+	_astdata.clock.uid = UID_CALENDAR_CLOCK;
 
 	// establezco configuración por defecto del manager
 	_astdata.cfg.updFlags = CalendarManagerCfgUpdNotif;

@@ -148,8 +148,6 @@ cJSON* getJsonFromCalendarPeriod(const calendar_period& obj){
 		return NULL;
 	}
 
-	// uid
-	cJSON_AddNumberToObject(json, JsonParser::p_uid, obj.uid);
 	// since
 	cJSON_AddNumberToObject(json, JsonParser::p_since, obj.since);
 	// until
@@ -168,9 +166,6 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERROR getJsonFromCalendarGeoloc cJSON_CreateObject json = null");
 		return NULL;
 	}
-
-	// uid
-	cJSON_AddNumberToObject(json, JsonParser::p_uid, obj.uid);
 
 	// timezone
 	cJSON_AddStringToObject(json, JsonParser::p_timezone, obj.timezone);
@@ -365,11 +360,6 @@ uint32_t getCalendarPeriodFromJson(calendar_period &obj, cJSON* json){
 	if(json == NULL){
 		return 0;
 	}
-	// uid
-	if((value = cJSON_GetObjectItem(json,JsonParser::p_uid)) != NULL){
-		obj.uid = value->valueint;
-		keys |= (1 << 0);
-	}
 
 	// since
 	if((value = cJSON_GetObjectItem(json,JsonParser::p_since)) != NULL){
@@ -401,12 +391,6 @@ uint32_t getCalendarGeolocFromJson(calendar_geoloc &obj, cJSON* json){
 	if(json == NULL){
 		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR json calendar.geoloc is Null");
 		return 0;
-	}
-
-	// uid
-	if((value = cJSON_GetObjectItem(json,JsonParser::p_uid)) != NULL){
-		obj.uid = value->valueint;
-		obj._keys |= (1 << 0);
 	}
 
 	// coords
