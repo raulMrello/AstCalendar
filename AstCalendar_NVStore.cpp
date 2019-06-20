@@ -19,6 +19,11 @@ static const char* _MODULE_ = "[AstCal]........";
 //------------------------------------------------------------------------------------
 void AstCalendar::restoreConfig(){
 	uint32_t crc = 0;
+
+	// establezco versión del modelo de datos
+	_astdata.uid = UID_CALENDAR_MANAGER;
+	_astdata.clock.uid = UID_CALENDAR_CLOCK;
+
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recuperando datos de memoria NV...");
 	bool success = true;
 	if(!restoreParameter("CalManCfg", &_astdata.cfg, sizeof(calendar_manager_cfg), NVSInterface::TypeBlob)){
