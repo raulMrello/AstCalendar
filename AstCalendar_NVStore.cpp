@@ -96,6 +96,19 @@ void AstCalendar::restoreConfig(){
 			_rtc->setTime(_now);
 		}
 	}
+	else {
+		// establece la hora por defecto martes, 1 Ene 2019 a las 00:00
+		// set January 1st,2018 0am as a default
+		_now.tm_sec  = 0;
+		_now.tm_min  = 0;
+		_now.tm_hour = 0;
+		_now.tm_mday = 1;
+		_now.tm_wday = 2;
+		_now.tm_mon  = 0;
+		_now.tm_year = 2019 - 1900;
+		_now.tm_yday = 0;
+		_now.tm_isdst = 0;
+	}
 
 	setenv("TZ", _astdata.clock.cfg.geoloc.timezone, 1);
 	tzset() ;
