@@ -20,7 +20,7 @@ static const char* _MODULE_ = "[AstCal]........";
 void AstCalendar::restoreConfig(){
 	uint32_t crc = 0;
 
-	// establezco versión del modelo de datos
+	// establezco versiï¿½n del modelo de datos
 	_astdata.uid = UID_CALENDAR_MANAGER;
 	_astdata.clock.uid = UID_CALENDAR_CLOCK;
 
@@ -64,11 +64,11 @@ void AstCalendar::restoreConfig(){
 	}
 
 	if(!success){
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_FS. Error en la recuperación de datos. Establece configuración por defecto");
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_FS. Error en la recuperaciï¿½n de datos. Establece configuraciï¿½n por defecto");
 		setDefaultConfig();
 	}
 
-	// Una vez establecida la configuración, actualiza la hora del sistema
+	// Una vez establecida la configuraciï¿½n, actualiza la hora del sistema
 	// obtiene la hora actual del RTC
 	if(_rtc){
 		_rtc->getTime(&_now);
@@ -146,13 +146,13 @@ bool AstCalendar::checkIntegrity(){
 		}
 	}
 
-	// Verifico número de periodos discordante
+	// Verifico nï¿½mero de periodos discordante
 	if((_astdata.clock.cfg._numPeriods != _astdata.clock.cfg.geoloc._numPeriods) || (_astdata.clock.cfg._numPeriods != CalendarClockCfgMaxNumPeriods) || (_astdata.clock.cfg.geoloc._numPeriods != CalendarClockCfgMaxNumPeriods)){
 		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY clock_cfg_periods=%d, geoloc_periods=%d", _astdata.clock.cfg._numPeriods, _astdata.clock.cfg.geoloc._numPeriods);
 		return false;
 	}
 
-	#warning TODO: otras verificaciones más exhaustivas
+	#warning TODO: otras verificaciones mï¿½s exhaustivas
 	// ...
 
 	return true;
@@ -162,19 +162,19 @@ bool AstCalendar::checkIntegrity(){
 //------------------------------------------------------------------------------------
 void AstCalendar::setDefaultConfig(){
 
-	// borro la configuración y el estado
+	// borro la configuraciï¿½n y el estado
 	_astdata = {0};
 
-	// establezco versión del modelo de datos
+	// establezco versiï¿½n del modelo de datos
 	_astdata.uid = UID_CALENDAR_MANAGER;
 	_astdata.clock.uid = UID_CALENDAR_CLOCK;
 
-	// establezco configuración por defecto del manager
+	// establezco configuraciï¿½n por defecto del manager
 	_astdata.cfg.updFlags = CalendarManagerCfgUpdNotif;
-	_astdata.cfg.evtFlags = CalendarClockNoEvents;
+	_astdata.cfg.evtFlags = CalendarClockMinEvt;
 	_astdata.cfg.verbosity = ESP_LOG_DEBUG;
 
-	// establezco configuración por defecto del reloj integrado (para Madrid)
+	// establezco configuraciï¿½n por defecto del reloj integrado (para Madrid)
 	strncpy(_astdata.clock.cfg.geoloc.timezone, "GMT-1GMT-2,M3.5.0/2,M10.5.0", CalendarGeolocTimezoneLength);
 	_astdata.clock.cfg.geoloc.coords[0] = 40.416500;
 	_astdata.clock.cfg.geoloc.coords[1] = -3.702560;
@@ -229,7 +229,7 @@ void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t&
 
 	// calendadar_manager.uid
 	if((data._keys & (1 << 0)) && data.uid != _astdata.uid){
-		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_UPDATE uid inválido");
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_UPDATE uid invï¿½lido");
 		err.code = Blob::ErrUidInvalid;
 		goto _updateConfigExit;
 	}
