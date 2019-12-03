@@ -60,24 +60,8 @@ void AstCalendar::stopSimulator() {
 
 
 //------------------------------------------------------------------------------------
-osStatus AstCalendar::putMessage(State::Msg *msg){
-    osStatus ost = _queue.put(msg, ActiveModule::DefaultPutTimeout);
-    if(ost != osOK){
-        DEBUG_TRACE_E(_EXPR_, _MODULE_, "QUEUE_PUT_ERROR %d", ost);
-    }
-    return ost;
-}
-
-
-//------------------------------------------------------------------------------------
 //-- PROTECTED METHODS IMPLEMENTATION ------------------------------------------------
 //------------------------------------------------------------------------------------
-
-
-//------------------------------------------------------------------------------------
-osEvent AstCalendar::getOsEvent(){
-	return _queue.get();
-}
 
 
 //------------------------------------------------------------------------------------
