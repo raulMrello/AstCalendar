@@ -9,20 +9,24 @@
 //-- TEST HEADERS --------------------------------------------------------------------
 //------------------------------------------------------------------------------------
 
-#include "unity.h"
+#include "mbed.h"
+#include "AppConfig.h"
+#include "mbed_api_userial.h"
+#include "FSManager.h"
+#include "MQLib.h"
 #include "AstCalendar.h"
+#include "unity.h"
+#include "Heap.h"
+#include "cJSON.h"
 
 //------------------------------------------------------------------------------------
 //-- REQUIRED HEADERS & COMPONENTS FOR TESTING ---------------------------------------
 //------------------------------------------------------------------------------------
 
-#include "AppConfig.h"
-#include "FSManager.h"
-#include "cJSON.h"
-
 /** variables requeridas para realizar el test */
 static FSManager* fs=NULL;
 static MQ::PublishCallback s_published_cb;
+static MQ::SubscribeCallback s_subscribed_cb;
 static void subscriptionCb(const char* topic, void* msg, uint16_t msg_len);
 static void publishedCb(const char* topic, int32_t result);
 static void executePrerequisites();
@@ -49,12 +53,15 @@ static const char* _MODULE_ = "[TEST_AstCal]...";
  * @brief Se verifica la creación del objeto y la suscripción a topics
  * MQLib
  */
-TEST_CASE("Init & MQLib suscription..............", "[AstCalendar]") {
+TEST_CASE("INIT..................................", "[AstCalendar]") {
 
-	esp_log_level_set("*", ESP_LOG_DEBUG);
 
-	// ejecuta requisitos previos
-	executePrerequisites();
+	firmwareStart(false);
+	fs = FSManager::getStaticInstance();
+	TEST_ASSERT_NOT_NULL(fs);
+
+	s_subscribed_cb = callback(&subscriptionCb);
+	TEST_ASSERT_EQUAL(MQ::MQClient::subscribe("stat/+/astcal", &s_subscribed_cb), MQ::SUCCESS);
 
 	// crea el objeto
 	TEST_ASSERT_NULL(astcal);
@@ -63,19 +70,17 @@ TEST_CASE("Init & MQLib suscription..............", "[AstCalendar]") {
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Iniciando AstCalendar... ");
 	astcal = new AstCalendar(fs, true);
 	MBED_ASSERT(astcal);
-	// activa soporte JSON
-	astcal->setJSONSupport(true);
-	TEST_ASSERT_TRUE(astcal->isJSONSupported());
+	astcal->setJSONSupport(false);
 	// establece topics base pub-sub
     astcal->setPublicationBase("astcal");
     astcal->setSubscriptionBase("astcal");
     // espera a que arranque
+    DEBUG_TRACE_I(_EXPR_, _MODULE_, "Esperando a AstCalendar");
     while(!astcal->ready()){
-		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Esperando a AstCalendar");
-		Thread::wait(1000);
+		Thread::wait(10);
 	}
 	TEST_ASSERT_TRUE(astcal->ready());
-	Thread::wait(1000);
+	Thread::wait(10000);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "AstCalendar OK!");
 }
 
