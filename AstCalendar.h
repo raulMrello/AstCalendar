@@ -59,13 +59,6 @@ class AstCalendar : public ActiveModule {
     void stopSimulator();
 
 
-    /** Interfaz para postear un mensaje de la máquina de estados en el Mailbox de la clase heredera
-     *  @param msg Mensaje a postear
-     *  @return Resultado
-     */
-    virtual osStatus putMessage(State::Msg *msg);
-
-
     /**
      * Activa y/o desactiva el soporte JSON
      * @param flag
@@ -96,10 +89,6 @@ class AstCalendar : public ActiveModule {
     	RecvBootGet	  = (State::EV_RESERVED_USER << 2),  /// Flag activado al recibir mensaje en "get/boot"
     };
 
-
-    /** Cola de mensajes de la máquina de estados */
-    Queue<State::Msg, MaxQueueMessages> _queue;
-
     /** Datos de configuración y estado */
     calendar_manager _astdata;
 
@@ -117,12 +106,6 @@ class AstCalendar : public ActiveModule {
 
     /** Flag de control para el soporte de objetos json */
     bool _json_supported;
-
-
-    /** Interfaz para obtener un evento osEvent de la clase heredera
-     *  @param msg Mensaje a postear
-     */
-    virtual osEvent getOsEvent();
 
 
  	/** Interfaz para manejar los eventos en la máquina de estados por defecto
