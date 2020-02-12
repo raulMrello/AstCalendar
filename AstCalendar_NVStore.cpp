@@ -171,8 +171,8 @@ void AstCalendar::setDefaultConfig(){
 
 	// establezco configuraci�n por defecto del manager
 	_astdata.cfg.updFlags = CalendarManagerCfgUpdNotif;
-	_astdata.cfg.evtFlags = CalendarClockMinEvt;
-	_astdata.cfg.verbosity = ESP_LOG_DEBUG;
+	_astdata.cfg.evtFlags = CalendarClockSecEvt;
+	_astdata.cfg.verbosity = APP_ASTCALENDAR_LOG_LEVEL;
 
 	// establezco configuraci�n por defecto del reloj integrado (para Madrid)
 	strncpy(_astdata.clock.cfg.geoloc.timezone, "GMT-1GMT-2,M3.5.0/2,M10.5.0", CalendarGeolocTimezoneLength);
