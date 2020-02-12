@@ -37,8 +37,6 @@ static inline const char* VERS_CALENDAR_NAME(){
 	}
 }
 
-
-
 /** Flags para la variable calendar:manager/cfg.updFlags */
 enum calendar_manager_cfg_updFlags {
 	CalendarManagerCfgUpdNotif 		= (1 << 0),	/// Habilita notificación de cambios en cualquier parámetro de la configuración
