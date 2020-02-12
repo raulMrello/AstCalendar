@@ -77,6 +77,12 @@ class AstCalendar : public ActiveModule {
     }
 
 
+    /**
+     * Activa servicio NTPClient
+     */
+    void enableNTPClient();
+
+
   private:
 
     /** Máximo número de mensajes alojables en la cola asociada a la máquina de estados */
@@ -106,6 +112,11 @@ class AstCalendar : public ActiveModule {
 
     /** Flag de control para el soporte de objetos json */
     bool _json_supported;
+
+    /** Variables para controlar la actualización horaria via NTP */
+    static const int NtpDifSecUpdate = 30;
+    bool _ntp_enabled;
+    time_t _last_rtc_time;
 
 
  	/** Interfaz para manejar los eventos en la máquina de estados por defecto
@@ -189,6 +200,11 @@ class AstCalendar : public ActiveModule {
 	 * @param err Recibe los errores generados durante la actualización
 	 */
 	void _updateConfig(const calendar_manager& data, Blob::ErrorData_t& err);
+
+    /**
+     * Callback invocada por lwip/sntp cada vez que reciba una actualización horaria
+     */
+    void _ntpUpdateCb();
 
 };
      
