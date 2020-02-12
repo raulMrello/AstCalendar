@@ -6,6 +6,7 @@
  */
 
 #include "AstCalendar.h"
+#include "lwip/apps/sntp.h"
 
 //------------------------------------------------------------------------------------
 //-- PRIVATE TYPEDEFS ----------------------------------------------------------------
@@ -14,7 +15,7 @@
 
 static const char* _MODULE_ = "[AstCal]........";
 #define _EXPR_	(!IS_ISR())
- 
+
 //------------------------------------------------------------------------------------
 //-- PUBLIC METHODS IMPLEMENTATION ---------------------------------------------------
 //------------------------------------------------------------------------------------
@@ -36,6 +37,9 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", os
     	esp_log_level_set(_MODULE_, ESP_LOG_WARN);
     }
 
+    // inicialización NTP
+    _ntp_enabled = false;
+
 	// Carga callbacks estï¿½ticas de publicaciï¿½n/suscripciï¿½n
     _publicationCb = callback(this, &AstCalendar::publicationCb);
     _rtc = NULL;
@@ -49,6 +53,7 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", os
 //------------------------------------------------------------------------------------
 void AstCalendar::startSimulator() {
 	_sim_counter = 0;
+	_last_rtc_time = time(NULL);
 	_sim_tmr->start(1000);
 }
 
@@ -73,10 +78,22 @@ void AstCalendar::publicationCb(const char* topic, int32_t result){
 //------------------------------------------------------------------------------------
 void AstCalendar::eventSimulatorCb() {
 	uint32_t flags = CalendarClockNoEvents;
-
 	// obtiene la hora actual y genera los eventos correspondientes
 	time_t t = time(NULL);
 	localtime_r(&t, &_now);
+
+	// chequea si ha habido actualización NTP
+
+	if(_ntp_enabled){
+		_last_rtc_time++;
+		if(_last_rtc_time < (t - NtpDifSecUpdate) || _last_rtc_time > (t + NtpDifSecUpdate)){
+			_ntpUpdateCb();
+		}
+	}
+	else{
+		_last_rtc_time = t;
+	}
+
 	flags |= CalendarClockSecEvt;
 	if(_now.tm_sec == 0){
 		flags |= CalendarClockMinEvt;
@@ -127,5 +144,43 @@ void AstCalendar::eventSimulatorCb() {
 	}
 }
 
+
+//------------------------------------------------------------------------------------
+void AstCalendar::enableNTPClient() {
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Activando servicio NTP");
+	_ntp_enabled = true;
+	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+	sntp_setservername(0, "pool.ntp.org");
+	sntp_init();
+	for(int i=0;i<3;i++){
+		if(!sntp_enabled()){
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Reiniciando servicio NTP %d de 3", i);
+			sntp_stop();
+			sntp_init();
+		}
+		else{
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "NTP activo!");
+			return;
+		}
+	}
+	sntp_stop();
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERROR iniciando servicio NTP");
+}
+
+
+//------------------------------------------------------------------------------------
+void AstCalendar::_ntpUpdateCb(){
+	time_t tnow = time(NULL);
+	_last_rtc_time = tnow;
+	localtime_r(&tnow, &_now);
+	char strftime_buf[64];
+	memset(strftime_buf, 0, 64);
+	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
+	strftime_buf[63] = 0;
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada via NTP: %s", strftime_buf);
+
+	// Actualiza hora en driver RTC
+	_rtc->setTime(_now);
+}
 
 
