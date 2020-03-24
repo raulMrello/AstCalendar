@@ -1,0 +1,129 @@
+asyncapi: 2.0.0
+
+info:
+  title: AstCalendar MQTT API
+  version: '0.1.1'
+  description: Especificación de las comunicaciones MQTT del componente AstCalendar
+
+defaultContentType: application/json
+
+channels:
+  XEO/VIARIS/{meshId}/get/0/{deviceId}/value/astcal:
+    description: Obtiene la hora y fecha del Calendario
+    parameters:
+      meshId:
+        description: Identificador de la red mesh a la que pertenece el cargador.
+        $ref: '../../../../../doc/Especificaciones/MQTT_API/uni_mqtt_api.yaml#/components/parameters/meshId'
+      deviceId:
+        $ref: '../../../../../doc/Especificaciones/MQTT_API/uni_mqtt_api.yaml#/components/parameters/deviceId'
+    publish:
+      operationId: getRequest
+      message:
+        $ref: '../../../../../doc/Especificaciones/MQTT_API/uni_mqtt_api.yaml#/components/messages/getRequest'
+
+  XEO/VIARIS/{meshId}/get/0/{deviceId}/cfg/astcal:
+    description: Obtiene la configuración del Calendario
+    parameters:
+      meshId:
+        description: Identificador de la red mesh a la que pertenece el cargador.
+        $ref: '../../../../../doc/Especificaciones/MQTT_API/uni_mqtt_api.yaml#/components/parameters/meshId'
+      deviceId:
+        $ref: '../../../../../doc/Especificaciones/MQTT_API/uni_mqtt_api.yaml#/components/parameters/deviceId'
+    publish:
+      operationId: getRequest
+      message:
+        $ref: '../../../../../doc/Especificaciones/MQTT_API/uni_mqtt_api.yaml#/components/messages/getRequest'
+
+  XEO/VIARIS/{meshId}/set/0/{deviceId}/cfg/astcal:
+    description: 'Actualiza la configuración del Gestor del calendario del Cargador'
+    parameters:
+      meshId:
+        $ref: '../../../../../doc/Especificaciones/MQTT_API/uni_mqtt_api.yaml#/components/parameters/meshId'
+      deviceId:
+        $ref: '../../../../../doc/Especificaciones/MQTT_API/uni_mqtt_api.yaml#/components/parameters/deviceId'
+    publish:
+      operationId: setCfgAstcal
+      message:
+        $ref: '#/components/messages/setCfgAstcal'
+
+
+components:
+  messages:
+    setCfgAstcal:
+      name: SetCfgAstcal
+      title: Solicitud de escritura de los parámetros de configuración del Calendario
+      payload:
+        type: object
+        properties:
+         idTrans:
+          type: integer
+          description: Identificador único de la transacción realizada
+         data:
+          type: object
+          $ref: "#/components/schemas/AstCalendar"          
+
+  schemas:
+    AstCalendar:
+      type: object
+      properties:
+        uid:
+          type: integer
+          description: Identificador del objeto astcal
+        cfg:
+          type: object
+          description: Configuración del calendario
+          properties:
+            updFlags:
+              type: integer
+              description: |
+                Flags para habilitar la notificación de cambios en la configuración del calendario:
+                - 0: Notificaciones desactivadas
+                - 1: Habilita notificaciones cuando se modifica algún parámetro de configuración
+              default: 1              
+            evtFlags:
+              type: integer
+              description: |
+                Flags para habilitar la notificación de cambios de estado o eventos del calendario:
+                - CalendarClockNoEvents		    = 0,		    //!< No hay eventos
+                - CalendarClockYearEvt  		  = (1 << 0),	//!< Evento al cambiar de año
+                - CalendarClockIVEvt 		      = (1 << 1),	//!< Evento al cambiar de invierno a verano
+                - CalendarClockVIEvt 		      = (1 << 2),	//!< Evento al cambiar de verano a invierno
+                - CalendarClockMonthEvt  	    = (1 << 3),	//!< Evento al cambiar de mes
+                - CalendarClockWeekEvt 		    = (1 << 4),	//!< Evento al cambiar de semana
+                - CalendarClockDayEvt 		    = (1 << 5),	//!< Evento al cambiar de día
+                - CalendarClockMiddayEvt 	    = (1 << 6),	//!< Evento al pasar por el medio día
+                - CalendarClockPreDuskEvt 	  = (1 << 7),	//!< Evento al pasar por el inicio de la ventana temporal de ocaso
+                - CalendarClockDuskEvt 		    = (1 << 8),	//!< Evento al ocaso
+                - CalendarClockPostDuskEvt 	  = (1 << 9),	//!< Evento al pasar por el final de la ventana temporal de ocaso
+                - CalendarClockReducStartEvt  = (1 << 10),//!< Evento al pasar por la hora de inicio de reducción de flujo luminoso
+                - CalendarClockReducStopEvt	  = (1 << 11),//!< Evento al pasar por la hora de finalización de reducción de flujo luminoso
+                - CalendarClockPreDawnEvt 	  = (1 << 12),//!< Evento al pasar por el inicio de la ventana temporal de orto
+                - CalendarClockDawnEvt 		    = (1 << 13),//!< Evento al pasar por el orto
+                - CalendarClockPostDawnEvt 	  = (1 << 14),//!< Evento al pasar por el final de la ventana temporal de orto
+                - CalendarClockHourEvt 		    = (1 << 15),//!< Evento al cambiar de hora
+                - CalendarClockMinEvt 		    = (1 << 16),//!< Evento al cambiar de minuto
+                - CalendarClockSecEvt 		    = (1 << 17),//!< Evento al cambiar de segundo
+                - CalendarClockDawnDuskUpdEvt = (1 << 18),//!< Evento al actualizar las horas de orto y ocaso
+                - CalendarClockPeriodEvt 	    = (1 << 19),//!< Evento al cambiar de periodo
+                - CalendarClockEvtINVALID	    = (1 << 31),//!< Indica un evento inválido
+              default: 0
+            verbosity:
+              type: integer
+              description: |
+                Nivel de depuración del calendario:
+                - 0: ERROR
+                - 1: WARN
+                - 2: INFO
+                - 3: DEBUG
+                - 4: VERBOSE
+              default: 2 (INFO)
+        stat:
+          type: object
+          description: Variables de estado del calendario
+          properties:
+            time:
+              type: integer
+              description: Hora en formato time_t
+              default: 0
+                 
+
