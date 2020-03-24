@@ -132,6 +132,9 @@ void AstCalendar::restoreConfig(){
 
 //------------------------------------------------------------------------------------
 bool AstCalendar::checkIntegrity(){
+	if(_astdata.cfg.nvs_id != APP_ASTCALENDAR_NVS_ID){
+		return false;
+	}
 	// verifico zona horaria
 	if(strlen(_astdata.clock.cfg.geoloc.timezone)==0){
 		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY timezone=%s", _astdata.clock.cfg.geoloc.timezone);
@@ -187,6 +190,7 @@ void AstCalendar::setDefaultConfig(){
 	}
 	_astdata.clock.cfg._numPeriods = CalendarClockCfgMaxNumPeriods;
 	_astdata.clock.cfg.geoloc._numPeriods = CalendarClockCfgMaxNumPeriods;
+	_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID;
 
 	saveConfig();
 }

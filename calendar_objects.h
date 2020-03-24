@@ -137,6 +137,7 @@ struct calendar_manager_cfg{
 	uint32_t updFlags;
 	uint32_t evtFlags;
 	uint8_t  verbosity;
+	uint32_t nvs_id;
 	uint32_t _keys;
 };
 
