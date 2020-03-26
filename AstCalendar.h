@@ -4,8 +4,8 @@
  *  Created on: Ene 2018
  *      Author: raulMrello
  *
- *	AstCalendar es el módulo encargado de gestionar la configuración del calendario astronómico y de generar
- *	los eventos correspondientes, conforme a dicha configuración
+ *	AstCalendar es el mï¿½dulo encargado de gestionar la configuraciï¿½n del calendario astronï¿½mico y de generar
+ *	los eventos correspondientes, conforme a dicha configuraciï¿½n
  */
  
 #ifndef __AstCalendar__H
@@ -31,7 +31,7 @@ class AstCalendar : public ActiveModule {
               
     /** Constructor por defecto
      * 	@param fs Objeto FSManager para operaciones de backup
-     * 	@param defdbg Flag para habilitar depuración por defecto
+     * 	@param defdbg Flag para habilitar depuraciï¿½n por defecto
      */
     AstCalendar(FSManager* fs, bool defdbg = false);
 
@@ -47,13 +47,13 @@ class AstCalendar : public ActiveModule {
     void attachRealTimeClock(RealTimeClock* rtc) {_rtc = rtc; }
 
 
-    /** Arranca el simulador de eventos basándose en un RtosTimer
+    /** Arranca el simulador de eventos basï¿½ndose en un RtosTimer
      *
      */
     void startSimulator();
 
 
-    /** Detiene el simulador de eventos basándose en un RtosTimer
+    /** Detiene el simulador de eventos basï¿½ndose en un RtosTimer
      *
      */
     void stopSimulator();
@@ -85,7 +85,7 @@ class AstCalendar : public ActiveModule {
 
   private:
 
-    /** Máximo número de mensajes alojables en la cola asociada a la máquina de estados */
+    /** Mï¿½ximo nï¿½mero de mensajes alojables en la cola asociada a la mï¿½quina de estados */
     static const uint32_t MaxQueueMessages = 16;
 
     /** Flags de operaciones a realizar por la tarea */
@@ -93,12 +93,13 @@ class AstCalendar : public ActiveModule {
     	RecvCfgSet 	 = (State::EV_RESERVED_USER << 0),  /// Flag activado al recibir mensaje en "set/cfg"
     	RecvCfgGet	 = (State::EV_RESERVED_USER << 1),  /// Flag activado al recibir mensaje en "get/cfg"
     	RecvBootGet	  = (State::EV_RESERVED_USER << 2),  /// Flag activado al recibir mensaje en "get/boot"
+      RecvRtcSet    = (State::EV_RESERVED_USER << 3)
     };
 
-    /** Datos de configuración y estado */
+    /** Datos de configuraciï¿½n y estado */
     calendar_manager _astdata;
 
-    /** Timer de simulación de eventos */
+    /** Timer de simulaciï¿½n de eventos */
     RtosTimer* _sim_tmr;
 
     /** Contador de segundos del simulador de eventos */
@@ -113,74 +114,74 @@ class AstCalendar : public ActiveModule {
     /** Flag de control para el soporte de objetos json */
     bool _json_supported;
 
-    /** Variables para controlar la actualización horaria via NTP */
+    /** Variables para controlar la actualizaciï¿½n horaria via NTP */
     static const int NtpDifSecUpdate = 30;
     bool _ntp_enabled;
     time_t _last_rtc_time;
 
 
- 	/** Interfaz para manejar los eventos en la máquina de estados por defecto
+ 	/** Interfaz para manejar los eventos en la mï¿½quina de estados por defecto
       *  @param se Evento a manejar
       *  @return State::StateResult Resultado del manejo del evento
       */
     virtual State::StateResult Init_EventHandler(State::StateEvent* se);
 
 
- 	/** Callback invocada al recibir una actualización de un topic local al que está suscrito
+ 	/** Callback invocada al recibir una actualizaciï¿½n de un topic local al que estï¿½ suscrito
       *  @param topic Identificador del topic
       *  @param msg Mensaje recibido
-      *  @param msg_len Tamaño del mensaje
+      *  @param msg_len Tamaï¿½o del mensaje
       */
     virtual void subscriptionCb(const char* topic, void* msg, uint16_t msg_len);
 
 
- 	/** Callback invocada al finalizar una publicación local
+ 	/** Callback invocada al finalizar una publicaciï¿½n local
       *  @param topic Identificador del topic
-      *  @param result Resultado de la publicación
+      *  @param result Resultado de la publicaciï¿½n
       */
     virtual void publicationCb(const char* topic, int32_t result);
 
 
-   	/** Chequea la integridad de los datos de configuración <_cfg>. En caso de que algo no sea
+   	/** Chequea la integridad de los datos de configuraciï¿½n <_cfg>. En caso de que algo no sea
    	 * 	coherente, restaura a los valores por defecto y graba en memoria NV.
    	 * 	@return True si la integridad es correcta, False si es incorrecta
 	 */
 	virtual bool checkIntegrity();
 
 
-   	/** Establece la configuración por defecto grabándola en memoria NV
+   	/** Establece la configuraciï¿½n por defecto grabï¿½ndola en memoria NV
 	 */
 	virtual void setDefaultConfig();
 
 
-   	/** Recupera la configuración de memoria NV
+   	/** Recupera la configuraciï¿½n de memoria NV
 	 */
 	virtual void restoreConfig();
 
 
-   	/** Graba la configuración en memoria NV
+   	/** Graba la configuraciï¿½n en memoria NV
 	 */
 	virtual void saveConfig();
 
 
-	/** Graba un parámetro en la memoria NV
-	 * 	@param param_id Identificador del parámetro
+	/** Graba un parï¿½metro en la memoria NV
+	 * 	@param param_id Identificador del parï¿½metro
 	 * 	@param data Datos asociados
-	 * 	@param size Tamaño de los datos
+	 * 	@param size Tamaï¿½o de los datos
 	 * 	@param type Tipo de los datos
-	 * 	@return True: éxito, False: no se pudo recuperar
+	 * 	@return True: ï¿½xito, False: no se pudo recuperar
 	 */
 	virtual bool saveParameter(const char* param_id, void* data, size_t size, NVSInterface::KeyValueType type){
 		return ActiveModule::saveParameter(param_id, data, size, type);
 	}
 
 
-	/** Recupera un parámetro de la memoria NV
-	 * 	@param param_id Identificador del parámetro
+	/** Recupera un parï¿½metro de la memoria NV
+	 * 	@param param_id Identificador del parï¿½metro
 	 * 	@param data Receptor de los datos asociados
-	 * 	@param size Tamaño de los datos a recibir
+	 * 	@param size Tamaï¿½o de los datos a recibir
 	 * 	@param type Tipo de los datos
-	 * 	@return True: éxito, False: no se pudo recuperar
+	 * 	@return True: ï¿½xito, False: no se pudo recuperar
 	 */
 	virtual bool restoreParameter(const char* param_id, void* data, size_t size, NVSInterface::KeyValueType type){
 		return ActiveModule::restoreParameter(param_id, data, size, type);
@@ -193,18 +194,20 @@ class AstCalendar : public ActiveModule {
 	void eventSimulatorCb();
 
 
-	/** Actualiza la configuración
+	/** Actualiza la configuraciï¿½n
 	 *
-	 * @param cfg Nueva configuración a aplicar
-	 * @param keys Flags de parámetros actualizados
-	 * @param err Recibe los errores generados durante la actualización
+	 * @param cfg Nueva configuraciï¿½n a aplicar
+	 * @param keys Flags de parï¿½metros actualizados
+	 * @param err Recibe los errores generados durante la actualizaciï¿½n
 	 */
 	void _updateConfig(const calendar_manager& data, Blob::ErrorData_t& err);
 
     /**
-     * Callback invocada por lwip/sntp cada vez que reciba una actualización horaria
+     * Callback invocada por lwip/sntp cada vez que reciba una actualizaciï¿½n horaria
      */
     void _ntpUpdateCb();
+
+    void setRtcTime(time_t tnow);
 
 };
      
