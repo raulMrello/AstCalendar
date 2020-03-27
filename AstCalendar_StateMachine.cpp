@@ -21,26 +21,26 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 	State::Msg* st_msg = (State::Msg*)se->oe->value.p;
     switch((int)se->evt){
         case State::EV_ENTRY:{
-        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Iniciando recuperación de datos...");
+        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Iniciando recuperaciï¿½n de datos...");
         	// recupera los datos de memoria NV
         	restoreConfig();
 
-        	// realiza la suscripción local ej: "[get,set]/+/$module"
+        	// realiza la suscripciï¿½n local ej: "[get,set]/+/$module"
         	char* sub_topic_local = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
         	MBED_ASSERT(sub_topic_local);
         	sprintf(sub_topic_local, "set/+/%s", _sub_topic_base);
         	if(MQ::MQClient::subscribe(sub_topic_local, new MQ::SubscribeCallback(this, &AstCalendar::subscriptionCb)) == MQ::SUCCESS){
-        		DEBUG_TRACE_D(_EXPR_, _MODULE_, "Sucripción LOCAL hecha a %s", sub_topic_local);
+        		DEBUG_TRACE_D(_EXPR_, _MODULE_, "Sucripciï¿½n LOCAL hecha a %s", sub_topic_local);
         	}
         	else{
-        		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_SUBSC en la suscripción LOCAL a %s", sub_topic_local);
+        		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_SUBSC en la suscripciï¿½n LOCAL a %s", sub_topic_local);
         	}
         	sprintf(sub_topic_local, "get/+/%s", _sub_topic_base);
         	if(MQ::MQClient::subscribe(sub_topic_local, new MQ::SubscribeCallback(this, &AstCalendar::subscriptionCb)) == MQ::SUCCESS){
-        		DEBUG_TRACE_D(_EXPR_, _MODULE_, "Sucripción LOCAL hecha a %s", sub_topic_local);
+        		DEBUG_TRACE_D(_EXPR_, _MODULE_, "Sucripciï¿½n LOCAL hecha a %s", sub_topic_local);
         	}
         	else{
-        		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_SUBSC en la suscripción LOCAL a %s", sub_topic_local);
+        		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_SUBSC en la suscripciï¿½n LOCAL a %s", sub_topic_local);
         	}
         	Heap::memFree(sub_topic_local);
 
@@ -53,15 +53,15 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
             return State::HANDLED;
         }
 
-        // Procesa datos recibidos de la publicación en cmd/$BASE/cfg/set
+        // Procesa datos recibidos de la publicaciï¿½n en cmd/$BASE/cfg/set
         case RecvCfgSet:{
         	Blob::SetRequest_t<calendar_manager>* req = (Blob::SetRequest_t<calendar_manager>*)st_msg->msg;
-        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nueva configuración");
-			// si no hay errores, actualiza la configuración
+        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nueva configuraciï¿½n");
+			// si no hay errores, actualiza la configuraciï¿½n
 			if(req->_error.code == Blob::ErrOK){
 				_updateConfig(req->data, req->_error);
 			}
-        	// si hay errores en el mensaje o en la actualización, devuelve resultado sin hacer nada
+        	// si hay errores en el mensaje o en la actualizaciï¿½n, devuelve resultado sin hacer nada
         	if(req->_error.code != Blob::ErrOK){
         		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_UPD al actualizar code=%d", req->_error.code);
         		char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
@@ -88,9 +88,9 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
         	saveConfig();
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Config actualizada");
 
-        	// si está habilitada la notificación de actualización, lo notifica
+        	// si estï¿½ habilitada la notificaciï¿½n de actualizaciï¿½n, lo notifica
         	if((_astdata.cfg.updFlags & CalendarManagerCfgUpdNotif) != 0){
-        		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Notificando actualización");
+        		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Notificando actualizaciï¿½n");
 				char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 				MBED_ASSERT(pub_topic);
 				sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);
@@ -114,7 +114,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
             return State::HANDLED;
         }
 
-        // Procesa datos recibidos de la publicación en cmd/$BASE/cfg/get
+        // Procesa datos recibidos de la publicaciï¿½n en cmd/$BASE/cfg/get
         case RecvCfgGet:{
         	Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
         	// prepara el topic al que responder
@@ -122,7 +122,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			MBED_ASSERT(pub_topic);
 			sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);
 
-			// responde con los datos solicitados y con los errores (si hubiera) de la decodificación de la solicitud
+			// responde con los datos solicitados y con los errores (si hubiera) de la decodificaciï¿½n de la solicitud
 			Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
 			MBED_ASSERT(resp);
 			if(_json_supported){
@@ -139,7 +139,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			return State::HANDLED;
         }
 
-        // Procesa datos recibidos de la publicación en get/boot
+        // Procesa datos recibidos de la publicaciï¿½n en get/boot
         case RecvBootGet:{
 			char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 			MBED_ASSERT(pub_topic);
@@ -159,6 +159,38 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			Heap::memFree(pub_topic);
 			return State::HANDLED;
         }
+
+		case RecvRtcSet:{
+			Blob::SetRequest_t<time_t>* req = (Blob::SetRequest_t<time_t>*)st_msg->msg;
+        	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nuevo datetime");
+			// si no hay errores, actualiza la configuraciï¿½n
+			if(req->_error.code == Blob::ErrOK){
+				setRtcTime(req->data);
+			}
+			time_t sysTime;
+			time(&sysTime);
+
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Notificando localtime");
+			char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
+			MBED_ASSERT(pub_topic);
+			sprintf(pub_topic, "stat/rtc/%s", _pub_topic_base);
+
+			Blob::Response_t<time_t>* resp = new Blob::Response_t<time_t>(req->idTrans, req->_error, sysTime);
+			MBED_ASSERT(resp);
+			if(_json_supported){
+				cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectAll);
+				MBED_ASSERT(jresp);
+				MQ::MQClient::publish(pub_topic, &jresp, sizeof(cJSON**), &_publicationCb);
+				cJSON_Delete(jresp);
+			}
+			else{
+				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<time_t>), &_publicationCb);
+			}
+			delete(resp);
+			Heap::memFree(pub_topic);
+			return State::HANDLED;
+        }
+
         case State::EV_EXIT:{
             nextState();
             return State::HANDLED;
