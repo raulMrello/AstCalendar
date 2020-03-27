@@ -37,7 +37,7 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", os
     	esp_log_level_set(_MODULE_, ESP_LOG_WARN);
     }
 
-    // inicialización NTP
+    // inicializaciï¿½n NTP
     _ntp_enabled = false;
 
 	// Carga callbacks estï¿½ticas de publicaciï¿½n/suscripciï¿½n
@@ -82,7 +82,7 @@ void AstCalendar::eventSimulatorCb() {
 	time_t t = time(NULL);
 	localtime_r(&t, &_now);
 
-	// chequea si ha habido actualización NTP
+	// chequea si ha habido actualizaciï¿½n NTP
 
 	if(_ntp_enabled){
 		_last_rtc_time++;
@@ -183,4 +183,22 @@ void AstCalendar::_ntpUpdateCb(){
 	_rtc->setTime(_now);
 }
 
+void AstCalendar::setRtcTime(time_t tnow){
+	_last_rtc_time = tnow;
+	
+	timeval tv;
+	tv.tv_sec = tnow;
+	tv.tv_usec = 0;
 
+	settimeofday (&tv, NULL);
+	
+	localtime_r(&tnow, &_now);
+	char strftime_buf[64];
+	memset(strftime_buf, 0, 64);
+	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
+	strftime_buf[63] = 0;
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada manualmente: %s", strftime_buf);
+
+	// Actualiza hora en driver RTC
+	_rtc->setTime(_now);
+}
