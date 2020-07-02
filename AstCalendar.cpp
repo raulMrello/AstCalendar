@@ -185,13 +185,13 @@ void AstCalendar::_ntpUpdateCb(){
 
 void AstCalendar::setRtcTime(time_t tnow){
 	_last_rtc_time = tnow;
-	
+
 	timeval tv;
 	tv.tv_sec = tnow;
 	tv.tv_usec = 0;
-
 	settimeofday (&tv, NULL);
-	
+
+	tnow = time(NULL);
 	localtime_r(&tnow, &_now);
 	char strftime_buf[64];
 	memset(strftime_buf, 0, 64);
