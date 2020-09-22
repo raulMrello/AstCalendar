@@ -88,6 +88,7 @@ void AstCalendar::eventSimulatorCb() {
 		_last_rtc_time++;
 		if(_last_rtc_time < (t - NtpDifSecUpdate) || _last_rtc_time > (t + NtpDifSecUpdate)){
 			_ntpUpdateCb();
+			flags |= CalendarClockNTPEvt;
 		}
 	}
 	else{
