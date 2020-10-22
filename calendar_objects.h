@@ -66,6 +66,7 @@ enum calendar_clock_stat_flags{
 	 CalendarClockSecEvt 		= (1 << 17),//!< Evento al cambiar de segundo
 	 CalendarClockDawnDuskUpdEvt= (1 << 18),//!< Evento al actualizar las horas de orto y ocaso
 	 CalendarClockPeriodEvt 	= (1 << 19),//!< Evento al cambiar de periodo
+	 CalendarClockNTPEvt 		= (1 << 20),//!< Evento al actualizar la hora via NTP
 	 CalendarClockEvtINVALID	= (1 << 31),//!< Indica un evento inválido
 };
 
