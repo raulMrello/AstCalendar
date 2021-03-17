@@ -203,3 +203,8 @@ void AstCalendar::setRtcTime(time_t tnow){
 	// Actualiza hora en driver RTC
 	_rtc->setTime(_now);
 }
+
+//------------------------------------------------------------------------------------
+time_t AstCalendar::GetSecondFromReset(){
+	return _pw_fail;
+}
