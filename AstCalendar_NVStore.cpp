@@ -110,7 +110,7 @@ void AstCalendar::restoreConfig(){
 		_now.tm_isdst = 0;
 	}
 
-	DEBUG_TRACE_I(_EXPR_,_MODULE_,"Segundos transcurridos desde el ultimo reset: %d",(uint32_t)_pw_fail);
+	DEBUG_TRACE_I(_EXPR_,_MODULE_,"Segundos transcurridos desde el ultimo reset: %u",(uint32_t)_pw_fail);
 
 	setenv("TZ", _astdata.clock.cfg.geoloc.timezone, 1);
 	tzset() ;
