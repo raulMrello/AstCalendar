@@ -113,10 +113,13 @@ void AstCalendar::restoreConfig(){
 	setenv("TZ", _astdata.clock.cfg.geoloc.timezone, 1);
 	tzset() ;
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", _astdata.clock.cfg.geoloc.timezone);
-	std::time_t lt = cpp_utils::timegm(&_now);
-	struct tm *local_field = gmtime(&lt);
-	local_field->tm_isdst = -1;
-	time_t utc = mktime(local_field);
+//	std::time_t lt = cpp_utils::timegm(&_now);
+//	struct tm *local_field = gmtime(&lt);
+//	local_field->tm_isdst = -1;
+//	time_t utc = mktime(local_field);
+	std::time_t utc = cpp_utils::timegm(&_now);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %d", (int)utc);
+
 
 	time_t tnow;
 	timeval tv;
