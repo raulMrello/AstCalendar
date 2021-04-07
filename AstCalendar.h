@@ -82,6 +82,11 @@ class AstCalendar : public ActiveModule {
      */
     void enableNTPClient();
 
+    /**
+	 * Segundos transcurridos desde el ultimo reset
+	 */
+    time_t GetSecondFromReset();
+
 
   private:
 
@@ -110,6 +115,9 @@ class AstCalendar : public ActiveModule {
 
     /** Hora actual en formato tm */
     tm _now;
+
+    /** Segundos desde el último apagado */
+    time_t _pw_fail;
 
     /** Flag de control para el soporte de objetos json */
     bool _json_supported;

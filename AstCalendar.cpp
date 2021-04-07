@@ -214,3 +214,8 @@ void AstCalendar::setRtcTime(time_t tnow){
 	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, strftime_buf);
 	_rtc->setTime(*utc_tm);
 }
+
+//------------------------------------------------------------------------------------
+time_t AstCalendar::GetSecondFromReset(){
+	return _pw_fail;
+}

@@ -71,7 +71,7 @@ void AstCalendar::restoreConfig(){
 	// Una vez establecida la configuraci�n, actualiza la hora del sistema
 	// obtiene la hora actual del RTC
 	if(_rtc){
-		_rtc->getTime(&_now);
+		_rtc->getTime(&_now, &_pw_fail);
 		if (_now.tm_year < (2018 - 1900)) {
 			DEBUG_TRACE_I(_EXPR_, _MODULE_, "ERR_RTC_READ datos incorrectos: %d:%d:%d, %d-%d-%d diasem=%d",
 					_now.tm_hour,
@@ -109,6 +109,8 @@ void AstCalendar::restoreConfig(){
 		_now.tm_yday = 0;
 		_now.tm_isdst = 0;
 	}
+
+	DEBUG_TRACE_I(_EXPR_,_MODULE_,"Segundos transcurridos desde el ultimo reset: %u",(uint32_t)_pw_fail);
 
 	setenv("TZ", _astdata.clock.cfg.geoloc.timezone, 1);
 	tzset() ;
