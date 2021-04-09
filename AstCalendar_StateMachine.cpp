@@ -113,7 +113,11 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 
             return State::HANDLED;
         }
-
+        case RcvSetDefault:{
+        	DEBUG_TRACE_E(_EXPR_,_MODULE_,"Factory Reset!!!");
+        	setDefaultConfig();
+        	return State::HANDLED;
+        }
         // Procesa datos recibidos de la publicaci�n en cmd/$BASE/cfg/get
         case RecvCfgGet:{
         	Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
