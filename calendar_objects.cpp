@@ -43,6 +43,7 @@ cJSON* getJsonFromCalendarManager(const calendar_manager& obj, ObjDataSelection 
 		cJSON_AddNumberToObject(cfg, JsonParser::p_updFlags, obj.cfg.updFlags);
 		cJSON_AddNumberToObject(cfg, JsonParser::p_evtFlags, obj.cfg.evtFlags);
 		cJSON_AddNumberToObject(cfg, JsonParser::p_verbosity, obj.cfg.verbosity);
+		cJSON_AddNumberToObject(cfg, JsonParser::p_nvsId, obj.cfg.nvs_id);
 		cJSON_AddItemToObject(json, JsonParser::p_cfg, cfg);
 	}
 
@@ -250,6 +251,10 @@ uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json){
 		if((value = cJSON_GetObjectItem(json,JsonParser::p_verbosity)) != NULL){
 			obj.cfg.verbosity = value->valueint;
 			obj.cfg._keys |= (1 << 2);
+		}
+		if((value = cJSON_GetObjectItem(json,JsonParser::p_nvsId)) != NULL){
+			obj.cfg.nvs_id = value->valueint;
+			obj.cfg._keys |= (1 << 3);
 		}
 		if(obj.cfg._keys){
 			obj._keys |= (1 << 1);

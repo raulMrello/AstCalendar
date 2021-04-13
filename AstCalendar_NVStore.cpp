@@ -259,6 +259,9 @@ void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t&
 		if((data.cfg._keys & (1 << 2))){
 			_astdata.cfg.verbosity = data.cfg.verbosity;
 		}
+		if((data.cfg._keys & (1 << 3))){
+			_astdata.cfg.nvs_id = data.cfg.nvs_id;
+		}
 	}
 	// calendar:clock:cfg
 	if((data._keys & (1 << 2)) && (data.clock._keys & (1 << 1))){
