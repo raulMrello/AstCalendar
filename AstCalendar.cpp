@@ -181,7 +181,13 @@ void AstCalendar::_ntpUpdateCb(){
 	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada via NTP: %s", strftime_buf);
 
 	// Actualiza hora en driver RTC
-	_rtc->setTime(_now);
+	tm* utc_tm = gmtime(&tnow);
+	memset(strftime_buf, 0, 64);
+	strftime(strftime_buf, sizeof(strftime_buf), "%c", utc_tm);
+	strftime_buf[63] = 0;
+
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, strftime_buf);
+	_rtc->setTime(*utc_tm);
 }
 
 void AstCalendar::setRtcTime(time_t tnow){
@@ -198,8 +204,18 @@ void AstCalendar::setRtcTime(time_t tnow){
 	memset(strftime_buf, 0, 64);
 	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
 	strftime_buf[63] = 0;
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada manualmente: %s", strftime_buf);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada manualmente(time_t=%d): %s", (int)tnow, strftime_buf);
 
 	// Actualiza hora en driver RTC
-	_rtc->setTime(_now);
+	tm* utc_tm = gmtime(&tnow);
+	memset(strftime_buf, 0, 64);
+	strftime(strftime_buf, sizeof(strftime_buf), "%c", utc_tm);
+	strftime_buf[63] = 0;
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, strftime_buf);
+	_rtc->setTime(*utc_tm);
+}
+
+//------------------------------------------------------------------------------------
+time_t AstCalendar::GetSecondFromReset(){
+	return _pw_fail;
 }

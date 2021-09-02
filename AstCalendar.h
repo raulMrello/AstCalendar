@@ -82,6 +82,11 @@ class AstCalendar : public ActiveModule {
      */
     void enableNTPClient();
 
+    /**
+	 * Segundos transcurridos desde el ultimo reset
+	 */
+    time_t GetSecondFromReset();
+
 
   private:
 
@@ -93,7 +98,8 @@ class AstCalendar : public ActiveModule {
     	RecvCfgSet 	 = (State::EV_RESERVED_USER << 0),  /// Flag activado al recibir mensaje en "set/cfg"
     	RecvCfgGet	 = (State::EV_RESERVED_USER << 1),  /// Flag activado al recibir mensaje en "get/cfg"
     	RecvBootGet	  = (State::EV_RESERVED_USER << 2),  /// Flag activado al recibir mensaje en "get/boot"
-      RecvRtcSet    = (State::EV_RESERVED_USER << 3)
+		RecvRtcSet    = (State::EV_RESERVED_USER << 3),
+		RcvSetDefault   = (State::EV_RESERVED_USER << 4)
     };
 
     /** Datos de configuraciï¿½n y estado */
@@ -110,6 +116,9 @@ class AstCalendar : public ActiveModule {
 
     /** Hora actual en formato tm */
     tm _now;
+
+    /** Segundos desde el último apagado */
+    time_t _pw_fail;
 
     /** Flag de control para el soporte de objetos json */
     bool _json_supported;
