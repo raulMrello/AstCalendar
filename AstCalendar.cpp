@@ -79,21 +79,26 @@ void AstCalendar::publicationCb(const char* topic, int32_t result){
 void AstCalendar::eventSimulatorCb() {
 	uint32_t flags = CalendarClockNoEvents;
 	// obtiene la hora actual y genera los eventos correspondientes
-	time_t t = time(NULL);
-	localtime_r(&t, &_now);
+	time_t tnow = time(NULL)+60;
+	localtime_r(&tnow, &_now);
+	if(_now.tm_sec != 0){
+		tnow -= _now.tm_sec;
+	}
+	localtime_r(&tnow, &_now);
+	timeval tv;
+	tv.tv_sec = tnow;
+	tv.tv_usec = 0;
+	settimeofday (&tv, NULL);
+
+	char strftime_buf[64];
+	memset(strftime_buf, 0, 64);
+	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
+	strftime_buf[63] = 0;
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora fast-mode: %s", strftime_buf);
 
 	// chequea si ha habido actualizaci�n NTP
 
-	if(_ntp_enabled){
-		_last_rtc_time++;
-		if(_last_rtc_time < (t - NtpDifSecUpdate) || _last_rtc_time > (t + NtpDifSecUpdate)){
-			_ntpUpdateCb();
-			flags |= CalendarClockNTPEvt;
-		}
-	}
-	else{
-		_last_rtc_time = t;
-	}
+	_last_rtc_time = tnow;
 
 	flags |= CalendarClockSecEvt;
 	if(_now.tm_sec == 0){
@@ -118,11 +123,12 @@ void AstCalendar::eventSimulatorCb() {
 		}
 	}
 	// actualiza variables de estado
-	_astdata.clock.stat.localtime = t;
+	_astdata.clock.stat.localtime = tnow;
 	_astdata.clock.stat.flags = flags;
 
 	// si hay flags que notificar...
 	if((flags & _astdata.cfg.evtFlags)!=0){
+
 		// crea el objeto a notificar
 		Blob::NotificationData_t<calendar_manager> *notif = new Blob::NotificationData_t<calendar_manager>(_astdata);
 		MBED_ASSERT(notif);
@@ -148,46 +154,46 @@ void AstCalendar::eventSimulatorCb() {
 
 //------------------------------------------------------------------------------------
 void AstCalendar::enableNTPClient() {
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Activando servicio NTP");
-	_ntp_enabled = true;
-	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-	sntp_setservername(0, "pool.ntp.org");
-	sntp_init();
-	for(int i=0;i<3;i++){
-		if(!sntp_enabled()){
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Reiniciando servicio NTP %d de 3", i);
-			sntp_stop();
-			sntp_init();
-		}
-		else{
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "NTP activo!");
-			return;
-		}
-	}
-	sntp_stop();
+//	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Activando servicio NTP");
+//	_ntp_enabled = true;
+//	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+//	sntp_setservername(0, "pool.ntp.org");
+//	sntp_init();
+//	for(int i=0;i<3;i++){
+//		if(!sntp_enabled()){
+//			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Reiniciando servicio NTP %d de 3", i);
+//			sntp_stop();
+//			sntp_init();
+//		}
+//		else{
+//			DEBUG_TRACE_I(_EXPR_, _MODULE_, "NTP activo!");
+//			return;
+//		}
+//	}
+//	sntp_stop();
 	DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERROR iniciando servicio NTP");
 }
 
 
 //------------------------------------------------------------------------------------
 void AstCalendar::_ntpUpdateCb(){
-	time_t tnow = time(NULL);
-	_last_rtc_time = tnow;
-	localtime_r(&tnow, &_now);
-	char strftime_buf[64];
-	memset(strftime_buf, 0, 64);
-	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
-	strftime_buf[63] = 0;
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada via NTP: %s", strftime_buf);
-
-	// Actualiza hora en driver RTC
-	tm* utc_tm = gmtime(&tnow);
-	memset(strftime_buf, 0, 64);
-	strftime(strftime_buf, sizeof(strftime_buf), "%c", utc_tm);
-	strftime_buf[63] = 0;
-
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, strftime_buf);
-	_rtc->setTime(*utc_tm);
+//	time_t tnow = time(NULL);
+//	_last_rtc_time = tnow;
+//	localtime_r(&tnow, &_now);
+//	char strftime_buf[64];
+//	memset(strftime_buf, 0, 64);
+//	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
+//	strftime_buf[63] = 0;
+//	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada via NTP: %s", strftime_buf);
+//
+//	// Actualiza hora en driver RTC
+//	tm* utc_tm = gmtime(&tnow);
+//	memset(strftime_buf, 0, 64);
+//	strftime(strftime_buf, sizeof(strftime_buf), "%c", utc_tm);
+//	strftime_buf[63] = 0;
+//
+//	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, strftime_buf);
+//	_rtc->setTime(*utc_tm);
 }
 
 void AstCalendar::setRtcTime(time_t tnow){
