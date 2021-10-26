@@ -90,11 +90,10 @@ void AstCalendar::eventSimulatorCb() {
 	tv.tv_usec = 0;
 	settimeofday (&tv, NULL);
 
-	char strftime_buf[64];
-	memset(strftime_buf, 0, 64);
-	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
-	strftime_buf[63] = 0;
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora fast-mode: %s", strftime_buf);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora fast-mode:");
+	time_t t = time(NULL);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "UTC:   %s", asctime(gmtime(&t)));
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "local: %s", asctime(localtime(&t)));
 
 	// chequea si ha habido actualizaci�n NTP
 
