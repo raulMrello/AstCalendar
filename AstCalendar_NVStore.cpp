@@ -187,7 +187,7 @@ void AstCalendar::setDefaultConfig(){
 	_astdata.cfg.verbosity = APP_ASTCALENDAR_LOG_LEVEL;
 
 	// establezco configuraci�n por defecto del reloj integrado (para Madrid)
-	strncpy(_astdata.clock.cfg.geoloc.timezone, "GMT-1GMT-2,M3.5.0/2,M10.5.0", CalendarGeolocTimezoneLength);
+	strncpy(_astdata.clock.cfg.geoloc.timezone, "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", CalendarGeolocTimezoneLength);
 	_astdata.clock.cfg.geoloc.coords[0] = 40.416500;
 	_astdata.clock.cfg.geoloc.coords[1] = -3.702560;
 	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
@@ -256,13 +256,16 @@ void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t&
 			_astdata.cfg.evtFlags = data.cfg.evtFlags;
 		}
 		if((data.cfg._keys & (1 << 2))){
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando verbosity=(de %d a %d)", _astdata.cfg.verbosity, data.cfg.verbosity);
 			_astdata.cfg.verbosity = data.cfg.verbosity;
+			esp_log_level_set(_MODULE_, _astdata.cfg.verbosity);
 		}
 	}
 	// calendar:clock:cfg
 	if((data._keys & (1 << 2)) && (data.clock._keys & (1 << 1))){
 		// clock.cfg.periods
 		if((data.clock.cfg._keys & (1 << 0))){
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando clock.cfg.periods");
 			for(int i=0;i<data.clock.cfg._numPeriods;i++){
 				_astdata.clock.cfg.periods[i] = data.clock.cfg.periods[i];
 			}
@@ -271,15 +274,18 @@ void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t&
 		if((data.clock.cfg._keys & (1 << 1))){
 			// coords
 			if((data.clock.cfg.geoloc._keys & (1 << 1))){
+				DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando clock.cfg.geoloc.coords = %.03f, %.03f", data.clock.cfg.geoloc.coords[0], data.clock.cfg.geoloc.coords[1]);
 				_astdata.clock.cfg.geoloc.coords[0] = data.clock.cfg.geoloc.coords[0];
 				_astdata.clock.cfg.geoloc.coords[1] = data.clock.cfg.geoloc.coords[1];
 			}
 			// timezone
 			if((data.clock.cfg.geoloc._keys & (1 << 2))){
+				DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando clock.cfg.geoloc.timezone = %s", data.clock.cfg.geoloc.timezone);
 				strncpy(_astdata.clock.cfg.geoloc.timezone, data.clock.cfg.geoloc.timezone, CalendarGeolocTimezoneLength);
 			}
 			// astCorr
 			if((data.clock.cfg.geoloc._keys & (1 << 3))){
+				DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando clock.cfg.geoloc.astCorr");
 				for(int i=0;i<data.clock.cfg.geoloc._numPeriods;i++){
 					_astdata.clock.cfg.geoloc.astCorr[i][0] = data.clock.cfg.geoloc.astCorr[i][0];
 					_astdata.clock.cfg.geoloc.astCorr[i][1] = data.clock.cfg.geoloc.astCorr[i][1];
