@@ -187,7 +187,7 @@ void AstCalendar::setDefaultConfig(){
 	_astdata.cfg.verbosity = APP_ASTCALENDAR_LOG_LEVEL;
 
 	// establezco configuraci�n por defecto del reloj integrado (para Madrid)
-	strncpy(_astdata.clock.cfg.geoloc.timezone, "GMT-1GMT-2,M3.5.0/2,M10.5.0", CalendarGeolocTimezoneLength);
+	strncpy(_astdata.clock.cfg.geoloc.timezone, "GMT-1GMT-2,M3.5.0/2,M10.5.0/3", CalendarGeolocTimezoneLength);
 	_astdata.clock.cfg.geoloc.coords[0] = 40.416500;
 	_astdata.clock.cfg.geoloc.coords[1] = -3.702560;
 	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
