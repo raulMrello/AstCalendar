@@ -131,11 +131,10 @@ void AstCalendar::restoreConfig(){
 	settimeofday (&tv, NULL);
 	tnow = time(NULL);
 	localtime_r(&tnow, &_now);
-	char strftime_buf[64];
-	memset(strftime_buf, 0, 64);
-	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
-	strftime_buf[63] = 0;
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema %s", strftime_buf);
+	time_t t = time(NULL);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema");
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(gmtime(&t)));
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(localtime(&t)));
 
 }
 
