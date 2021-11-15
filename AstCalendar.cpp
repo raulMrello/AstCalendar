@@ -174,19 +174,14 @@ void AstCalendar::_ntpUpdateCb(){
 	time_t tnow = time(NULL);
 	_last_rtc_time = tnow;
 	localtime_r(&tnow, &_now);
-	char strftime_buf[64];
-	memset(strftime_buf, 0, 64);
-	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
-	strftime_buf[63] = 0;
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada via NTP: %s", strftime_buf);
+	time_t t = time(NULL);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema actualizada via NTP");
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(gmtime(&t)));
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(localtime(&t)));
 
 	// Actualiza hora en driver RTC
 	tm* utc_tm = gmtime(&tnow);
-	memset(strftime_buf, 0, 64);
-	strftime(strftime_buf, sizeof(strftime_buf), "%c", utc_tm);
-	strftime_buf[63] = 0;
-
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, strftime_buf);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, asctime(gmtime(&tnow)));
 	_rtc->setTime(*utc_tm);
 }
 
@@ -200,18 +195,14 @@ void AstCalendar::setRtcTime(time_t tnow){
 
 	tnow = time(NULL);
 	localtime_r(&tnow, &_now);
-	char strftime_buf[64];
-	memset(strftime_buf, 0, 64);
-	strftime(strftime_buf, sizeof(strftime_buf), "%c", &_now);
-	strftime_buf[63] = 0;
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Hora del sistema actualizada manualmente(time_t=%d): %s", (int)tnow, strftime_buf);
+	time_t t = time(NULL);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema actualizada manualmente");
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(gmtime(&t)));
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(localtime(&t)));
 
 	// Actualiza hora en driver RTC
 	tm* utc_tm = gmtime(&tnow);
-	memset(strftime_buf, 0, 64);
-	strftime(strftime_buf, sizeof(strftime_buf), "%c", utc_tm);
-	strftime_buf[63] = 0;
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, strftime_buf);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, asctime(gmtime(&tnow)));
 	_rtc->setTime(*utc_tm);
 }
 
