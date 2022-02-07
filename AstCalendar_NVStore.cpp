@@ -188,6 +188,7 @@ void AstCalendar::setDefaultConfig(){
 
 	// establezco configuraci�n por defecto del reloj integrado (para Madrid)
 	strncpy(_astdata.clock.cfg.geoloc.timezone, "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", CalendarGeolocTimezoneLength);
+	_astdata.clock.cfg.geoloc.timezoneCode = 1;
 	_astdata.clock.cfg.geoloc.coords[0] = 40.416500;
 	_astdata.clock.cfg.geoloc.coords[1] = -3.702560;
 	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
@@ -290,6 +291,11 @@ void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t&
 					_astdata.clock.cfg.geoloc.astCorr[i][0] = data.clock.cfg.geoloc.astCorr[i][0];
 					_astdata.clock.cfg.geoloc.astCorr[i][1] = data.clock.cfg.geoloc.astCorr[i][1];
 				}
+			}
+			// timezoneCode
+			if((data.clock.cfg.geoloc._keys & (1 << 4))){
+				DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando clock.cfg.geoloc.timezoneCode = %d", data.clock.cfg.geoloc.timezoneCode);
+				_astdata.clock.cfg.geoloc.timezoneCode = data.clock.cfg.geoloc.timezoneCode;
 			}
 		}
 	}

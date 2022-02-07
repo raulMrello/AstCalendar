@@ -4,7 +4,7 @@
  *  Created on: Mar 2019
  *      Author: raulMrello
  *
- *	Objetos JSON relativos al módulo metering
+ *	Objetos JSON relativos al mï¿½dulo metering
  */
  
 #ifndef CALENDAR_OBJECTS_
@@ -20,16 +20,16 @@
 #define VERS_CALENDAR_INTERNAL_NAME	(const char*)""
 
 
-/** Selección de la versión utilizada 	*/
-/** DEFINIR SEGÚN APLICACIÓN 			*/
+/** Selecciï¿½n de la versiï¿½n utilizada 	*/
+/** DEFINIR SEGï¿½N APLICACIï¿½N 			*/
 #define VERS_CALENDAR_SELECTED		VERS_CALENDAR_INTERNAL /*others...*/
 
 
-/** Macro de generación de UIDs*/
+/** Macro de generaciï¿½n de UIDs*/
 #define UID_CALENDAR_MANAGER		(uint32_t)(0x00000003 | ((uint32_t)VERS_CALENDAR_SELECTED << 20))
 #define UID_CALENDAR_CLOCK			(uint32_t)(0x00000004 | ((uint32_t)VERS_CALENDAR_SELECTED << 20))
 
-/** Macro de generación de nombre de versión */
+/** Macro de generaciï¿½n de nombre de versiï¿½n */
 static inline const char* VERS_CALENDAR_NAME(){
 	switch(VERS_CALENDAR_SELECTED){
 		case VERS_CALENDAR_INTERNAL:	return VERS_CALENDAR_INTERNAL_NAME;
@@ -39,25 +39,25 @@ static inline const char* VERS_CALENDAR_NAME(){
 
 /** Flags para la variable calendar:manager/cfg.updFlags */
 enum calendar_manager_cfg_updFlags {
-	CalendarManagerCfgUpdNotif 		= (1 << 0),	/// Habilita notificación de cambios en cualquier parámetro de la configuración
+	CalendarManagerCfgUpdNotif 		= (1 << 0),	/// Habilita notificaciï¿½n de cambios en cualquier parï¿½metro de la configuraciï¿½n
 };
 
 
 /** Flags para la variable calendar:clock/stat.flags */
 enum calendar_clock_stat_flags{
 	 CalendarClockNoEvents		= 0,		//!< No hay eventos
-	 CalendarClockYearEvt  		= (1 << 0),	//!< Evento al cambiar de año
+	 CalendarClockYearEvt  		= (1 << 0),	//!< Evento al cambiar de aï¿½o
 	 CalendarClockIVEvt 		= (1 << 1),	//!< Evento al cambiar de invierno a verano
 	 CalendarClockVIEvt 		= (1 << 2),	//!< Evento al cambiar de verano a invierno
 	 CalendarClockMonthEvt  	= (1 << 3),	//!< Evento al cambiar de mes
 	 CalendarClockWeekEvt 		= (1 << 4),	//!< Evento al cambiar de semana
-	 CalendarClockDayEvt 		= (1 << 5),	//!< Evento al cambiar de día
-	 CalendarClockMiddayEvt 	= (1 << 6),	//!< Evento al pasar por el medio día
+	 CalendarClockDayEvt 		= (1 << 5),	//!< Evento al cambiar de dï¿½a
+	 CalendarClockMiddayEvt 	= (1 << 6),	//!< Evento al pasar por el medio dï¿½a
 	 CalendarClockPreDuskEvt 	= (1 << 7),	//!< Evento al pasar por el inicio de la ventana temporal de ocaso
 	 CalendarClockDuskEvt 		= (1 << 8),	//!< Evento al ocaso
 	 CalendarClockPostDuskEvt 	= (1 << 9),	//!< Evento al pasar por el final de la ventana temporal de ocaso
-	 CalendarClockReducStartEvt	= (1 << 10),//!< Evento al pasar por la hora de inicio de reducción de flujo luminoso
-	 CalendarClockReducStopEvt	= (1 << 11),//!< Evento al pasar por la hora de finalización de reducción de flujo luminoso
+	 CalendarClockReducStartEvt	= (1 << 10),//!< Evento al pasar por la hora de inicio de reducciï¿½n de flujo luminoso
+	 CalendarClockReducStopEvt	= (1 << 11),//!< Evento al pasar por la hora de finalizaciï¿½n de reducciï¿½n de flujo luminoso
 	 CalendarClockPreDawnEvt 	= (1 << 12),//!< Evento al pasar por el inicio de la ventana temporal de orto
 	 CalendarClockDawnEvt 		= (1 << 13),//!< Evento al pasar por el orto
 	 CalendarClockPostDawnEvt 	= (1 << 14),//!< Evento al pasar por el final de la ventana temporal de orto
@@ -67,20 +67,20 @@ enum calendar_clock_stat_flags{
 	 CalendarClockDawnDuskUpdEvt= (1 << 18),//!< Evento al actualizar las horas de orto y ocaso
 	 CalendarClockPeriodEvt 	= (1 << 19),//!< Evento al cambiar de periodo
 	 CalendarClockNTPEvt 		= (1 << 20),//!< Evento al actualizar la hora via NTP
-	 CalendarClockEvtINVALID	= (1 << 31),//!< Indica un evento inválido
+	 CalendarClockEvtINVALID	= (1 << 31),//!< Indica un evento invï¿½lido
 };
 
 /** Flags para la variable calendar:manager/cfg.evtFlags */
 typedef calendar_clock_stat_flags calendar_manager_cfg_evtFlags;
 
 
-/** Máximo número de periodos permitidos para el array calendar:clock/cfg.periods[] */
+/** Mï¿½ximo nï¿½mero de periodos permitidos para el array calendar:clock/cfg.periods[] */
 static const uint8_t CalendarClockCfgMaxNumPeriods = 8;
 
-/** Tamaño máximo del texto asociado a la variable calendar:geoloc/timezone */
+/** Tamaï¿½o mï¿½ximo del texto asociado a la variable calendar:geoloc/timezone */
 static const uint8_t CalendarGeolocTimezoneLength = 64;
 
-/** Límites min-max de los parámetros astronómicos */
+/** Lï¿½mites min-max de los parï¿½metros astronï¿½micos */
 static const double CalendarGeolocLatitudeMin = -90;
 static const double CalendarGeolocLatitudeMax =  90;
 static const double CalendarGeolocLongitudeMin = -180;
@@ -91,6 +91,7 @@ static const double CalendarGeolocLongitudeMax =  180;
 struct calendar_geoloc{
 	double 	 coords[2];
 	char   	 timezone[CalendarGeolocTimezoneLength];
+	uint8_t	 timezoneCode;
 	time_t 	 astCorr[CalendarClockCfgMaxNumPeriods][2];
 	uint8_t _numPeriods;
 	uint32_t _keys;
@@ -216,7 +217,7 @@ cJSON* getJsonFromCalendar(const T& obj, ObjDataSelection type){
  * Decodifica el mensaje JSON en un objeto
  * @param obj Recibe el objeto decodificado
  * @param json Objeto JSON a decodificar
- * @return keys Parámetros decodificados o 0 en caso de error
+ * @return keys Parï¿½metros decodificados o 0 en caso de error
  */
 uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json);
 
@@ -224,7 +225,7 @@ uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json);
  * Decodifica el mensaje JSON en un objeto
  * @param obj Recibe el objeto decodificado
  * @param json Objeto JSON a decodificar
- * @return keys Parámetros decodificados o 0 en caso de error
+ * @return keys Parï¿½metros decodificados o 0 en caso de error
  */
 uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json);
 
@@ -232,7 +233,7 @@ uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json);
  * Decodifica el mensaje JSON en un objeto
  * @param obj Recibe el objeto decodificado
  * @param json Objeto JSON a decodificar
- * @return keys Parámetros decodificados o 0 en caso de error
+ * @return keys Parï¿½metros decodificados o 0 en caso de error
  */
 uint32_t getCalendarClockCfgFromJson(calendar_clock_cfg &obj, cJSON* json);
 
@@ -240,7 +241,7 @@ uint32_t getCalendarClockCfgFromJson(calendar_clock_cfg &obj, cJSON* json);
  * Decodifica el mensaje JSON en un objeto
  * @param obj Recibe el objeto decodificado
  * @param json Objeto JSON a decodificar
- * @return keys Parámetros decodificados o 0 en caso de error
+ * @return keys Parï¿½metros decodificados o 0 en caso de error
  */
 uint32_t getCalendarPeriodFromJson(calendar_period &obj, cJSON* json);
 
@@ -248,7 +249,7 @@ uint32_t getCalendarPeriodFromJson(calendar_period &obj, cJSON* json);
  * Decodifica el mensaje JSON en un objeto
  * @param obj Recibe el objeto decodificado
  * @param json Objeto JSON a decodificar
- * @return keys Parámetros decodificados o 0 en caso de error
+ * @return keys Parï¿½metros decodificados o 0 en caso de error
  */
 uint32_t getCalendarGeolocFromJson(calendar_geoloc &obj, cJSON* json);
 
@@ -258,8 +259,8 @@ uint32_t getCalendarObjFromJson(T& obj, cJSON* json_obj){
 	if (std::is_same<T, calendar_manager>::value){
 		return JSON::getCalendarManagerFromJson((calendar_manager&)obj, json_obj);
 	}
-	if (std::is_same<T, calendar_clock>::value){
-		return JSON::getCalendarClockFromJson((calendar_clock&)obj, json_obj);
+	if (std::is_same<T, calendar_clock_cfg>::value){
+		return JSON::getCalendarClockCfgFromJson((calendar_clock_cfg&)obj, json_obj);
 	}
 	return 0;
 }

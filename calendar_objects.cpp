@@ -217,6 +217,9 @@ cJSON* getJsonFromCalendarGeoloc(const calendar_geoloc& obj){
 		cJSON_AddItemToArray(array, array2);
 	}
 	cJSON_AddItemToObject(json, JsonParser::p_astCorr, array);
+	
+	// timezoneCode
+	cJSON_AddNumberToObject(json, JsonParser::p_timezoneCode, obj.timezoneCode);
 	return json;
 }
 
@@ -442,6 +445,11 @@ uint32_t getCalendarGeolocFromJson(calendar_geoloc &obj, cJSON* json){
 				obj._keys |= (1 << 3);
 			}
 		}
+	}
+	// timezoneCode
+	if((value = cJSON_GetObjectItem(json,JsonParser::p_timezoneCode)) != NULL){
+		obj.timezoneCode = value->valueint;
+		obj._keys |= (1 << 4);
 	}
 	return obj._keys;
 }
