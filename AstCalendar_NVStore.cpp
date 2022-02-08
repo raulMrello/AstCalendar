@@ -147,7 +147,15 @@ void AstCalendar::restoreConfig(){
 	if(!restoreParameter("CalClockCod", &_astdata.clock.cfg.geoloc.timezoneCode, sizeof(uint8_t),NVSInterface::TypeUint8)){
 		saveCfg = true;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo CalClockCod! Establece configuracion por defecto");
-		_astdata.clock.cfg.geoloc.timezoneCode = 1;
+
+		if(strcmp(_astdata.clock.cfg.geoloc.timezone, "WET-0WEST-1,M3.5.0/01:00:00,M10.5.0/02:00:00")==0)
+			_astdata.clock.cfg.geoloc.timezoneCode = 8;
+		else if(strcmp(_astdata.clock.cfg.geoloc.timezone, "EET-2EEST-3,M3.5.0/03:00:00,M10.5.0/04:00:00")==0)
+			_astdata.clock.cfg.geoloc.timezoneCode = 3;
+		else if(strcmp(_astdata.clock.cfg.geoloc.timezone, "NZST-12NZDT-13,M10.1.0/02:00:00,M3.3.0/03:00:00")==0)
+			_astdata.clock.cfg.geoloc.timezoneCode = 32;
+		else
+			_astdata.clock.cfg.geoloc.timezoneCode = 1;
 	}
 
 	if(!restoreParameter("CalClockNum", &_astdata.clock.cfg.geoloc._numPeriods, sizeof(uint8_t),NVSInterface::TypeUint8)){
