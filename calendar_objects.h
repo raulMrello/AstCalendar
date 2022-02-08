@@ -97,6 +97,15 @@ struct calendar_geoloc{
 	uint32_t _keys;
 };
 
+/**Objeto calendar:geoloc_old */
+struct calendar_geoloc_old{
+	double 	 coords[2];
+	char   	 timezone[CalendarGeolocTimezoneLength];
+	time_t 	 astCorr[CalendarClockCfgMaxNumPeriods][2];
+	uint8_t _numPeriods;
+	uint32_t _keys;
+};
+
 
 /**Objeto calendar:period */
 struct calendar_period{
@@ -110,6 +119,14 @@ struct calendar_period{
 struct calendar_clock_cfg{
 	calendar_period periods[CalendarClockCfgMaxNumPeriods];
 	calendar_geoloc geoloc;
+	uint8_t _numPeriods;
+	uint32_t _keys;
+};
+
+/**Objeto calendar:clock:cfg_old */
+struct calendar_clock_cfg_old{
+	calendar_period periods[CalendarClockCfgMaxNumPeriods];
+	calendar_geoloc_old geoloc;
 	uint8_t _numPeriods;
 	uint32_t _keys;
 };
