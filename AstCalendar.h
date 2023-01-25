@@ -117,7 +117,7 @@ class AstCalendar : public ActiveModule {
     /** Hora actual en formato tm */
     tm _now;
 
-    /** Segundos desde el último apagado */
+    /** Segundos desde el ï¿½ltimo apagado */
     time_t _pw_fail;
 
     /** Flag de control para el soporte de objetos json */
@@ -217,6 +217,9 @@ class AstCalendar : public ActiveModule {
     void _ntpUpdateCb();
 
     void setRtcTime(time_t tnow);
+
+    // actualiza la hora tras un cambio de configuraciÃ³n
+    void _updateRtcFromCfg();
 
 };
      

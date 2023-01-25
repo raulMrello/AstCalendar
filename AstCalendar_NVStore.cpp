@@ -197,6 +197,15 @@ void AstCalendar::restoreConfig(){
 
 	esp_log_level_set(_MODULE_, (esp_log_level_t)_astdata.cfg.verbosity);
 
+	// actualiza la hora
+	_updateRtcFromCfg();
+	
+
+}
+
+
+//------------------------------------------------------------------------------------
+void AstCalendar::_updateRtcFromCfg(){
 	// Una vez establecida la configuraci�n, actualiza la hora del sistema
 	// obtiene la hora actual del RTC
 	if(_rtc){
@@ -264,9 +273,7 @@ void AstCalendar::restoreConfig(){
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema");
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(gmtime(&t)));
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(localtime(&t)));
-
 }
-
 
 //------------------------------------------------------------------------------------
 bool AstCalendar::checkIntegrity(){
