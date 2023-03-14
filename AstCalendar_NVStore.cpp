@@ -17,6 +17,19 @@ static const char* _MODULE_ = "[AstCal]........";
 
 
 //------------------------------------------------------------------------------------
+void AstCalendar::cleanUp(){
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "Limpiamos configuraciones antigua...");
+
+	if(!removeParameter("CalManCfg")){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS limpiando old_cfg CalManCfg");
+	}
+
+	if(!removeParameter("CalClockCfg")){
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS limpiando old_cfg CalClockCfg");
+	}
+}
+
+//------------------------------------------------------------------------------------
 void AstCalendar::restoreConfig(){
 	uint32_t crc = 0;
 
@@ -199,8 +212,10 @@ void AstCalendar::restoreConfig(){
 
 	// actualiza la hora
 	_updateRtcFromCfg();
-	
 
+	//limpiamos claves viejas
+	cleanUp();
+	
 }
 
 
