@@ -60,6 +60,10 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			// si no hay errores, actualiza la configuraci�n
 			if(req->_error.code == Blob::ErrOK){
 				_updateConfig(req->data, req->_error);
+				// si cambia la configuración de zona, recarga la hora
+				if((req->data.clock.cfg.geoloc._keys & (1 << 2)) || (req->data.clock.cfg.geoloc._keys & (1 << 4))){
+					_updateRtcFromCfg();
+				}
 			}
         	// si hay errores en el mensaje o en la actualizaci�n, devuelve resultado sin hacer nada
         	if(req->_error.code != Blob::ErrOK){
