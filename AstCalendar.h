@@ -172,6 +172,12 @@ class AstCalendar : public ActiveModule {
 	 */
 	virtual void saveConfig();
 
+  /**
+   * @brief Elimina de NVS claves antiguas
+   * 
+   */
+  void cleanUp();
+
 
 	/** Graba un par�metro en la memoria NV
 	 * 	@param param_id Identificador del par�metro
