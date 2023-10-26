@@ -29,6 +29,109 @@
 #define UID_CALENDAR_MANAGER		(uint32_t)(0x00000003 | ((uint32_t)VERS_CALENDAR_SELECTED << 20))
 #define UID_CALENDAR_CLOCK			(uint32_t)(0x00000004 | ((uint32_t)VERS_CALENDAR_SELECTED << 20))
 
+
+// Astronomico
+/** Valor incorrecto para orto y ocaso */
+#define Zone_MAX_SUNTIME_LIMIT  (uint16_t)1440
+#define Zone_SET_SUNTIME_OOB 	0xF000
+
+#define PI		(double)(3.14159265)
+#define RAD		(double)(180/PI)
+#define VP		(double)(8.22E-5)
+#define M0		(double)(2.12344)
+#define MN		(double)(1.72019E-2)
+#define T0		(double)(2444000.5)
+#define MR		(double)(0.04301)
+#define FF		((double)13750.987)
+
+#define	HUGE_VAL	(3.402823E+38F)	  /* FLT_MAX in 'float.h' */
+
+#define	TWOOPI	 0.63661977236758134308
+#define	P0S	    0.2078236841696101220215102e6
+#define	P1S	    -0.765864156388469493709081e5
+#define	P2S	    0.70641360814006880884734e4
+#define	P3S	    -0.2378593245781215847583e3
+#define	P4S	    0.28078274176220686085e1
+#define	Q0S	    0.1323046665086493066402123e6
+#define	Q1S	    0.5651686795316917682421e4
+#define	Q2S	    0.1089998110371290528265e3
+
+#define SQRT2   1.41421356237309504880
+#define	SQ2P1	2.414213562373095048802e0
+#define	SQ2M1	0.414213562373095048802e0
+#define	PIO2	1.570796326794896619231e0
+#define	PIO4	0.785398163397448309615e0
+#define	P0	    0.445413400592906803197511e2
+#define	PP1	    0.77477687719204208616481e2
+#define	P2	    0.40969264832102256374186e2
+#define	P3	    0.666057901700926265753e1
+#define	P4	    0.1589740288482307048e0
+#define	Q0	    0.445413400592906804445995e2
+#define	Q1	    0.92324801072300974840693e2
+#define	Q2	    0.62835930511032376833267e2
+#define	Q3	    0.1550397755142198752523e2
+
+#define	INVPI	1.27323954473516268      /*   ( 4 / PI )   */
+#define	P0N	    -0.1306820264754825668269611177e+5
+#define	P1N	    0.1055970901714953193602353981e+4
+#define	P2N	    -0.1550685653483266376941705728e+2
+#define	P3N	    0.3422554387241003435328470489e-1
+#define	P4N	    0.3386638642677172096076369e-4
+#define	Q0N	    -0.1663895238947119001851464661e+5
+#define	Q1N	    0.4765751362916483698926655581e+4
+#define	Q2N	    -0.1555033164031709966900124574e+3
+
+#define INT_MAX		(32767)
+
+#define	DOUBLE_FRACTION_SIZE		    52	/* without the hidden bit */
+#define	DOUBLE_BIAS		        	    1023
+#define	MIN_DOUBLE_BIASED_EXP 		    1
+#define	MAX_DOUBLE_BIASED_EXP		    0x7fe
+#define	DOUBLE_BIASED_INF_EXP 		    0x7ff
+#define	DOUBLE_BIASED_NaN_EXP 		    0x7ff
+#define	COPY_DOUBLE_SIGN( sign, hi )	( ((hi) & 0x7fffffff) | ((unsigned long)(sign) & 0x80000000) )
+#define	GET_DOUBLE_SIGN( hi )		    ( ( (hi) & 0x80000000 ) ? 1 : 0)
+#define	GET_DOUBLE_HI_MANTISSA( hi )	( (hi) & ( ( 1L << (DOUBLE_FRACTION_SIZE - 32) ) - 1 ) )
+#define	GET_DOUBLE_LO_MANTISSA( lo )	(lo)
+#define	GET_DOUBLE_EXPONENT( hi )	    ( ( (hi) >> (DOUBLE_FRACTION_SIZE - 32) ) & 0x7ff )
+#define	STRIP_DOUBLE_EXPONENT( hi )	    ( (hi) & 0x800fffff )
+#define	PUT_DOUBLE_EXPONENT( hi, exp )	( (hi) | ((unsigned long)exp << (DOUBLE_FRACTION_SIZE - 32) ) )
+#define	DOUBLE_IS_ZERO( hi, lo )	    ( ((hi) & 0x7fffffff) == 0 && (lo) == 0 ) /* also for denormals */
+#define BIAS	                        DOUBLE_BIAS
+
+/** Codigos relativos a la fecha */
+#define Rtc_DAY_MON		(uint8_t)0x40
+#define Rtc_DAY_TUE		(uint8_t)0x20
+#define Rtc_DAY_WED		(uint8_t)0x10
+#define Rtc_DAY_THU		(uint8_t)0x08
+#define Rtc_DAY_FRI		(uint8_t)0x04
+#define Rtc_DAY_SAT		(uint8_t)0x02
+#define Rtc_DAY_SUN		(uint8_t)0x01
+#define Rtc_DAY_ALLWEEK (uint8_t)0x7F
+#define Rtc_MON_JAN		(uint8_t)1
+#define Rtc_MON_FEB		(uint8_t)2
+#define Rtc_MON_MAR		(uint8_t)3
+#define Rtc_MON_APR		(uint8_t)4
+#define Rtc_MON_MAY		(uint8_t)5
+#define Rtc_MON_JUN		(uint8_t)6
+#define Rtc_MON_JUL		(uint8_t)7
+#define Rtc_MON_AUG		(uint8_t)8
+#define Rtc_MON_SEP		(uint8_t)9
+#define Rtc_MON_OCT		(uint8_t)10
+#define Rtc_MON_NOV		(uint8_t)11
+#define Rtc_MON_DEC		(uint8_t)12
+
+typedef union
+{
+	struct
+	{
+		unsigned long	lo;
+		unsigned long	hi;
+	}
+	s;
+	double	d;
+}double2longs_t;
+
 /** Macro de generaci�n de nombre de versi�n */
 static inline const char* VERS_CALENDAR_NAME(){
 	switch(VERS_CALENDAR_SELECTED){
@@ -36,6 +139,8 @@ static inline const char* VERS_CALENDAR_NAME(){
 		default: 						return "";
 	}
 }
+
+/////////////////////////////////////////////////////////////////
 
 /** Flags para la variable calendar:manager/cfg.updFlags */
 enum calendar_manager_cfg_updFlags {
@@ -168,6 +273,26 @@ struct calendar_manager{
 	calendar_clock clock;
 	uint32_t _keys;
 };
+
+/** Tipo definido para objetos tipo CALENDAR_T */
+typedef struct {
+  	uint8_t hour; 
+  	uint8_t minute;
+  	uint8_t second;
+  	uint8_t weekday;
+  	uint8_t month;
+  	uint8_t date; 
+  	uint8_t year;
+	uint8_t _NAN;
+}CALENDAR_T;
+
+// Estructura de un objeto coordenada en formato DMS
+typedef struct{
+	int16_t	Grados;
+	int8_t	Minutos;
+	int8_t	Segundos;
+	int8_t  Signo;
+}COORD_T;
 
 
 

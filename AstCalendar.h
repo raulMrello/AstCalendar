@@ -227,6 +227,10 @@ class AstCalendar : public ActiveModule {
     // actualiza la hora tras un cambio de configuración
     void _updateRtcFromCfg();
 
+  unsigned char IsNaN(double hh, double mm, signed short int gmt);
+  double own_abs(double x);
+  int8_t Zone_CalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight);
+
 };
      
 #endif /*__AstCalendar__H */
