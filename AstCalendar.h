@@ -86,6 +86,21 @@ class AstCalendar : public ActiveModule {
 	 * Segundos transcurridos desde el ultimo reset
 	 */
     time_t GetSecondFromReset();
+    /**
+     * Calcula la hora de orto y ocaso dada una fecha y una localizacion
+     * @param cal Referencia al calendario
+     * @param gmt GMT aplicable al calculo en minutos
+     * @param lat Referencia a la latitud
+     * @param lng Referencia a la longitud
+     * @param corrSunrise Correccion aplicable al resultado de orto
+     * @param corrSunset Correccion aplicable al resultado de ocaso
+     * @param sunrise Resultado de orto
+     * @param sunset Resultado de ocaso
+     * @param isAllDay Flag que se activa si resulta ser un dia sin ocaso
+     * @param isAllNight Flag que se activa si resulta ser un dia sin orto
+     * @return codigo de error <= 0
+     */
+    int8_t Zone_CalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight);
 
 
   private:
@@ -229,7 +244,6 @@ class AstCalendar : public ActiveModule {
 
   unsigned char IsNaN(double hh, double mm, signed short int gmt);
   double own_abs(double x);
-  int8_t Zone_CalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight);
 
 };
      

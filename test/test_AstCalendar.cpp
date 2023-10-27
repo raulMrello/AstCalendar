@@ -56,7 +56,7 @@ static const char* _MODULE_ = "[TEST_AstCal]...";
 TEST_CASE("INIT..................................", "[AstCalendar]") {
 
 
-	firmwareStart(false);
+	//firmwareStart(false);
 	fs = FSManager::getStaticInstance();
 	TEST_ASSERT_NOT_NULL(fs);
 
@@ -229,29 +229,239 @@ TEST_CASE("Orto  y ocaso ........................", "[AstCalendar]"){
 	int16_t corrSunset = 0;
 
 	CALENDAR_T cal;
-	cal.hour = 0;
+	cal.hour = 11;
 	cal.minute = 0;
 	cal.second = 0;
 	cal.weekday = 0;
-	cal.month = 0;
-	cal.date = 0;
-	cal.year = 0;
+	cal.month = 10; //1-12
+	cal.date = 27;
+	cal.year = 23; //a partir del 2000
 	cal._NAN = 0;
 
 	COORD_T lat;
-	lat.Grados = 0;
-	lat.Minutos = 0;
-	lat.Segundos = 0;
-	lat.Signo = 0;
+	// 40.528388,-3.6567716 Alcobendas
+	lat.Grados = 40;
+	lat.Minutos = 32;
+	lat.Segundos = 14;
+	lat.Signo = 1;
 	
 	COORD_T lng;
-	lng.Grados = 0;
-	lng.Minutos = 0;
-	lng.Segundos = 0;
-	lng.Signo = 0;
+	lng.Grados = -3;
+	lng.Minutos = 38;
+	lng.Segundos = 14;
+	lng.Signo = -1;
+	int16_t gmt = 120; // en octubre pasamos a 60
 
-	Zone_CalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, corrSunrise, corrSunset, &sunrise, &sunset,&isAllDay, &isAllNight);
+	astcal->Zone_CalculateSuntimes(&cal, gmt, &lat, &lng, corrSunrise, corrSunset, &sunrise, &sunset,&isAllDay, &isAllNight);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "GMT2 - 27-10-2023 Sunrise: %d(%d:%d), Sunset: %d(%d:%d)", sunrise, sunrise/60, sunrise%60, sunset, sunset/60, sunset%60);
+
+	// Probamos el calculo a 1 de noviembre
+	cal.month = 11;
+	cal.date = 1;
+	gmt = 60;
+	astcal->Zone_CalculateSuntimes(&cal, gmt, &lat, &lng, corrSunrise, corrSunset, &sunrise, &sunset,&isAllDay, &isAllNight);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "GMT1 - 01-11-2023 Sunrise: %d(%d:%d), Sunset: %d(%d:%d)", sunrise, sunrise/60, sunrise%60, sunset, sunset/60, sunset%60);
+	
 }
+int diffff(struct tm* utc_time , struct tm* local_time ){
+	DEBUG_TRACE_E(_EXPR_, _MODULE_, "Diferencia de horas");
+	
+	bool sameDay = true;
+	int gmtDiff = 0;
+	int utcMins = 0;
+	int localMins = 0;
+	int diff_hours = 0;
+	
+	utcMins = utc_time->tm_hour*60 + utc_time->tm_min;
+	localMins = local_time->tm_hour*60 + local_time->tm_min;
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC[dia: %d]: %d:%d -> %d", utc_time->tm_mday, utc_time->tm_hour, utc_time->tm_min, utcMins);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "LCL[dia: %d]: %d:%d -> %d", local_time->tm_mday, local_time->tm_hour, local_time->tm_min, localMins);
+	
+	if(local_time->tm_mday != utc_time->tm_mday){
+		sameDay = false;
+		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Diferente dia");
+		
+		if(localMins > utcMins)
+			diff_hours = (1440+utcMins) - localMins;
+		else
+			diff_hours = (1440+localMins) - utcMins;
+	}
+	else{
+		diff_hours = abs(localMins - utcMins);
+	}
+
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Diferencia: %d", diff_hours);
+
+	return diff_hours;
+}
+
+
+TEST_CASE("Cambios de hora mismo dia ........................", "[AstCalendar]"){
+	char timezone[] = "GMT-1GMT-2,M3.5.0/2,M10.5.0";
+	tm _now;
+	setenv("TZ", timezone, 1);
+	tzset() ;
+	
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", timezone);
+	_now.tm_sec  = 0;
+	_now.tm_min  = 0;
+	_now.tm_hour = 8;
+	_now.tm_mday = 27;
+	_now.tm_wday = 5;
+	_now.tm_mon  = 9;
+	_now.tm_year = 2023 - 1900;
+	_now.tm_yday = 300;
+	_now.tm_isdst = 1;
+	std::time_t utc = cpp_utils::timegm(&_now);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %d", (int)utc);
+	
+
+	time_t tnow;
+	timeval tv;
+	tv.tv_sec = utc;
+	tv.tv_usec = 0;
+
+	settimeofday (&tv, NULL);
+
+	tnow = time(NULL);
+	localtime_r(&tnow, &_now);
+	time_t t = time(NULL);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema");
+	tm _gmtime = *gmtime(&t);
+	tm _localtime = *localtime(&t);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
+	int diferencia = diffff(&_gmtime, &_localtime);
+
+	DEBUG_TRACE_I(_EXPR_ ,_MODULE_, "Diferencia en minutos: %d",diferencia);
+
+}
+
+TEST_CASE("Cambios de hora diferente dia ........................", "[AstCalendar]"){
+	char timezone[] = "GMT-1GMT-2,M3.5.0/2,M10.5.0";
+	tm _now;
+	setenv("TZ", timezone, 1);
+	tzset() ;
+	
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", timezone);
+	_now.tm_sec  = 0;
+	_now.tm_min  = 0;
+	_now.tm_hour = 23;
+	_now.tm_mday = 27;
+	_now.tm_wday = 5;
+	_now.tm_mon  = 9;
+	_now.tm_year = 2023 - 1900;
+	_now.tm_yday = 300;
+	_now.tm_isdst = 1;
+	std::time_t utc = cpp_utils::timegm(&_now);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %d", (int)utc);
+	
+
+	time_t tnow;
+	timeval tv;
+	tv.tv_sec = utc;
+	tv.tv_usec = 0;
+
+	settimeofday (&tv, NULL);
+
+	tnow = time(NULL);
+	localtime_r(&tnow, &_now);
+	time_t t = time(NULL);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema");
+	tm _gmtime = *gmtime(&t);
+	tm _localtime = *localtime(&t);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
+	int diferencia = diffff(&_gmtime, &_localtime);
+
+	DEBUG_TRACE_I(_EXPR_ ,_MODULE_, "Diferencia en minutos: %d",diferencia);
+
+}
+
+TEST_CASE("Cambios de hora diferente dia 2 ........................", "[AstCalendar]"){
+	char timezone[] = "GMT-1GMT-2,M3.5.0/2,M10.5.0";
+	tm _now;
+	setenv("TZ", timezone, 1);
+	tzset() ;
+	
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", timezone);
+	_now.tm_sec  = 0;
+	_now.tm_min  = 0;
+	_now.tm_hour = 22;
+	_now.tm_mday = 27;
+	_now.tm_wday = 5;
+	_now.tm_mon  = 9;
+	_now.tm_year = 2023 - 1900;
+	_now.tm_yday = 300;
+	_now.tm_isdst = 1;
+	std::time_t utc = cpp_utils::timegm(&_now);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %d", (int)utc);
+	
+
+	time_t tnow;
+	timeval tv;
+	tv.tv_sec = utc;
+	tv.tv_usec = 0;
+
+	settimeofday (&tv, NULL);
+
+	tnow = time(NULL);
+	localtime_r(&tnow, &_now);
+	time_t t = time(NULL);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema");
+	tm _gmtime = *gmtime(&t);
+	tm _localtime = *localtime(&t);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
+	int diferencia = diffff(&_gmtime, &_localtime);
+
+	DEBUG_TRACE_I(_EXPR_ ,_MODULE_, "Diferencia en minutos: %d",diferencia);
+
+}
+
+TEST_CASE("Cambios de hora  ........................", "[AstCalendar]"){
+	char timezone[] = "GMT-1GMT-2,M3.5.0/2,M10.5.0";
+	tm _now;
+	setenv("TZ", timezone, 1);
+	tzset() ;
+	
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", timezone);
+	_now.tm_sec  = 0;
+	_now.tm_min  = 0;
+	_now.tm_hour = 01;
+	_now.tm_mday = 28;
+	_now.tm_wday = 5;
+	_now.tm_mon  = 9;
+	_now.tm_year = 2023 - 1900;
+	_now.tm_yday = 300;
+	_now.tm_isdst = 1;
+	std::time_t utc = cpp_utils::timegm(&_now);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %d", (int)utc);
+	
+
+	time_t tnow;
+	timeval tv;
+	tv.tv_sec = utc;
+	tv.tv_usec = 0;
+
+	settimeofday (&tv, NULL);
+
+	tnow = time(NULL);
+	localtime_r(&tnow, &_now);
+	time_t t = time(NULL);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema");
+	tm _gmtime = *gmtime(&t);
+	tm _localtime = *localtime(&t);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
+	int diferencia = diffff(&_gmtime, &_localtime);
+
+	DEBUG_TRACE_I(_EXPR_ ,_MODULE_, "Diferencia en minutos: %d",diferencia);
+
+}
+
+
+
 //------------------------------------------------------------------------------------
 //-- PREREQUISITES -------------------------------------------------------------------
 //------------------------------------------------------------------------------------

@@ -280,18 +280,23 @@ typedef struct {
   	uint8_t minute;
   	uint8_t second;
   	uint8_t weekday;
-  	uint8_t month;
+  	uint8_t month;		//1-12
   	uint8_t date; 
-  	uint8_t year;
+  	uint8_t year;		//a partir del 2000, 23 = 2023
 	uint8_t _NAN;
 }CALENDAR_T;
 
 // Estructura de un objeto coordenada en formato DMS
+/*
+	Ejemplo: 40.5372512,-3.6372245
+	40.5372512 -> grados = 40, minutos = 32, segundos = 14, signo = 1
+	-3.6372245 -> grados = -3, minutos = 38, segundos = 14, signo = -1
+*/
 typedef struct{
-	int16_t	Grados;
+	int16_t	Grados;		//poner signo si es negativo
 	int8_t	Minutos;
 	int8_t	Segundos;
-	int8_t  Signo;
+	int8_t  Signo; 		//1: positivo, -1: negativo
 }COORD_T;
 
 

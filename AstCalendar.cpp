@@ -211,6 +211,7 @@ time_t AstCalendar::GetSecondFromReset(){
 	return _pw_fail;
 }
 
+//------------------------------------------------------------------------------------
 unsigned char AstCalendar::IsNaN(double hh, double mm, signed short int gmt){
 	double2longs_t v64;
 	v64.d = hh;
@@ -227,6 +228,7 @@ unsigned char AstCalendar::IsNaN(double hh, double mm, signed short int gmt){
 	return 0;
 }
 
+//------------------------------------------------------------------------------------
 double AstCalendar::own_abs(double x){
 	if( x >= 0 )
 	{
@@ -235,21 +237,7 @@ double AstCalendar::own_abs(double x){
 	return( x - x - x);
 }
 
-
-/**
- * Calcula la hora de orto y ocaso dada una fecha y una localizaci�n
- * @param cal Referencia al calendario
- * @param gmt GMT aplicable al c�lculo
- * @param lat Referencia a la latitud
- * @param lng Referencia a la longitud
- * @param corrSunrise Correcci�n aplicable al resultado de orto
- * @param corrSunset Correcci�n aplicable al resultado de ocaso
- * @param sunrise Resultado de orto
- * @param sunset Resultado de ocaso
- * @param isAllDay Flag que se activa si resulta ser un d�a sin ocaso
- * @param isAllNight Flag que se activa si resulta ser un d�a sin orto
- * @return c�digo de error <= 0
- */
+//------------------------------------------------------------------------------------
 int8_t AstCalendar::Zone_CalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight){
 	double Lon, Lat;
 	double JD, J1, P, AM, V, L, O_B, DC;
