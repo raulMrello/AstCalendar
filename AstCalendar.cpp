@@ -118,7 +118,7 @@ void AstCalendar::eventSimulatorCb() {
 			}
 		}
 	}
-	if(_cur_dst == 0 && _now.tm_isd > 0){
+	if(_curr_dst == 0 && _now.tm_isdst > 0){
 		flags |= CalendarClockIVEvt;
 		_curr_dst = _now.tm_isdst;
 	}
