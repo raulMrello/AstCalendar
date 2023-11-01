@@ -175,6 +175,8 @@ enum calendar_clock_stat_flags{
 	 CalendarClockEvtINVALID	= (1 << 31),//!< Indica un evento inv�lido
 };
 
+char* calendarClockStatFlags2String(calendar_clock_stat_flags flags);
+
 /** Flags para la variable calendar:manager/cfg.evtFlags */
 typedef calendar_clock_stat_flags calendar_manager_cfg_evtFlags;
 

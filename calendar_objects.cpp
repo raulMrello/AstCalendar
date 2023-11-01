@@ -16,6 +16,34 @@
 static const char* _MODULE_ = "[calendar:].....";
 #define _EXPR_	(!IS_ISR())
 
+char* calendarClockStatFlags2String(calendar_clock_stat_flags flags){
+	switch(flags){
+		case CalendarClockNoEvents:			return (char*)"CalendarClockNoEvents";
+		case CalendarClockYearEvt:			return (char*)"CalendarClockYearEvt";
+		case CalendarClockIVEvt:			return (char*)"CalendarClockIVEvt";
+		case CalendarClockVIEvt:			return (char*)"CalendarClockVIEvt";
+		case CalendarClockMonthEvt:			return (char*)"CalendarClockMonthEvt";
+		case CalendarClockWeekEvt:			return (char*)"CalendarClockWeekEvt";
+		case CalendarClockDayEvt:			return (char*)"CalendarClockDayEvt";
+		case CalendarClockMiddayEvt:		return (char*)"CalendarClockMiddayEvt";
+		case CalendarClockPreDuskEvt:		return (char*)"CalendarClockPreDuskEvt";
+		case CalendarClockDuskEvt:			return (char*)"CalendarClockDuskEvt";
+		case CalendarClockPostDuskEvt:		return (char*)"CalendarClockPostDuskEvt";
+		case CalendarClockReducStartEvt:	return (char*)"CalendarClockReducStartEvt";
+		case CalendarClockReducStopEvt:		return (char*)"CalendarClockReducStopEvt";
+		case CalendarClockPreDawnEvt:		return (char*)"CalendarClockPreDawnEvt";
+		case CalendarClockDawnEvt:			return (char*)"CalendarClockDawnEvt";
+		case CalendarClockPostDawnEvt:		return (char*)"CalendarClockPostDawnEvt";
+		case CalendarClockHourEvt:			return (char*)"CalendarClockHourEvt";
+		case CalendarClockMinEvt:			return (char*)"CalendarClockMinEvt";
+		case CalendarClockSecEvt:			return (char*)"CalendarClockSecEvt";
+		case CalendarClockDawnDuskUpdEvt:	return (char*)"CalendarClockDawnDuskUpdEvt";
+		case CalendarClockPeriodEvt:		return (char*)"CalendarClockPeriodEvt";
+		case CalendarClockNTPEvt:			return (char*)"CalendarClockNTPEvt";
+		case CalendarClockEvtINVALID:		return (char*)"CalendarClockEvtINVALID";
+		default:							return (char*)"CalendarClockEvtUNKNOWN";
+	}
+}
 
 namespace JSON{
 

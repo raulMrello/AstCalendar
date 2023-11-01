@@ -142,6 +142,7 @@ class AstCalendar : public ActiveModule {
     static const int NtpDifSecUpdate = 30;
     bool _ntp_enabled;
     time_t _last_rtc_time;
+    int _curr_dst;
 
 
  	/** Interfaz para manejar los eventos en la m�quina de estados por defecto

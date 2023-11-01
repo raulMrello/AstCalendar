@@ -43,6 +43,7 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", os
 	// Carga callbacks est�ticas de publicaci�n/suscripci�n
     _publicationCb = callback(this, &AstCalendar::publicationCb);
     _rtc = NULL;
+	_curr_dst = 0;
 	_sim_tmr = new RtosTimer(callback(this, &AstCalendar::eventSimulatorCb), osTimerPeriodic, "AstCalSimTmr");
 	MBED_ASSERT(_sim_tmr);
 	// inicia el generador de eventos
@@ -117,6 +118,15 @@ void AstCalendar::eventSimulatorCb() {
 			}
 		}
 	}
+	if(_curr_dst == 0 && _now.tm_isdst > 0){
+		flags |= CalendarClockIVEvt;
+		_curr_dst = _now.tm_isdst;
+	}
+	else if(_curr_dst !=0 && _now.tm_isdst == 0){
+		flags |= CalendarClockVIEvt;
+		_curr_dst = _now.tm_isdst;
+	}
+
 	// actualiza variables de estado
 	_astdata.clock.stat.localtime = t;
 	_astdata.clock.stat.flags = flags;
@@ -174,6 +184,7 @@ void AstCalendar::_ntpUpdateCb(){
 	time_t tnow = time(NULL);
 	_last_rtc_time = tnow;
 	localtime_r(&tnow, &_now);
+	_curr_dst = _now.tm_isdst;
 	time_t t = time(NULL);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema actualizada via NTP");
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(gmtime(&t)));
@@ -195,6 +206,7 @@ void AstCalendar::setRtcTime(time_t tnow){
 
 	tnow = time(NULL);
 	localtime_r(&tnow, &_now);
+	_curr_dst = _now.tm_isdst;
 	time_t t = time(NULL);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Hora del sistema actualizada manualmente");
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(gmtime(&t)));
