@@ -45,6 +45,28 @@ char* calendarClockStatFlags2String(calendar_clock_stat_flags flags){
 	}
 }
 
+COORD_T initializeCoord(double coord){
+	COORD_T coord_t;
+	coord_t.Grados = (int16_t)coord;
+	coord_t.Minutos = abs((int8_t)((coord - coord_t.Grados)*60));
+	coord_t.Segundos = abs((int8_t)((((coord - coord_t.Grados)*60) - coord_t.Minutos)*60));
+	coord_t.Signo = (coord < 0)?-1:1;
+	return coord_t;
+}
+
+CALENDAR_T initializeCalendar(tm _tm){
+	CALENDAR_T cal;
+	cal.hour = _tm.tm_hour;
+	cal.minute = _tm.tm_min;
+	cal.second = _tm.tm_sec;
+	cal.weekday = _tm.tm_wday;
+	cal.month = _tm.tm_mon + 1;
+	cal.date = _tm.tm_mday;
+	cal.year = _tm.tm_year - 100;
+	cal._NAN = 0;
+	return cal;
+}
+
 namespace JSON{
 
 

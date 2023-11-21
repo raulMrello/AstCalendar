@@ -44,6 +44,7 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", os
     _publicationCb = callback(this, &AstCalendar::publicationCb);
     _rtc = NULL;
 	_curr_dst = 0;
+	_curr_sun = 1;
 	_sim_tmr = new RtosTimer(callback(this, &AstCalendar::eventSimulatorCb), osTimerPeriodic, "AstCalSimTmr");
 	MBED_ASSERT(_sim_tmr);
 	// inicia el generador de eventos
@@ -76,6 +77,85 @@ void AstCalendar::publicationCb(const char* topic, int32_t result){
 }
 
 
+int AstCalendar::gmtDesviation(struct tm* utc_time , struct tm* local_time ){
+	bool sameDay = true;
+	int gmtDiff = 0;
+	int utcMins = 0;
+	int localMins = 0;
+	int diff_hours = 0;
+	
+	utcMins = utc_time->tm_hour*60 + utc_time->tm_min;
+	localMins = local_time->tm_hour*60 + local_time->tm_min;
+	DEBUG_TRACE_D(_EXPR_, _MODULE_, "UTC[dia: %d]: %d:%d -> %d", utc_time->tm_mday, utc_time->tm_hour, utc_time->tm_min, utcMins);
+	DEBUG_TRACE_D(_EXPR_, _MODULE_, "LCL[dia: %d]: %d:%d -> %d", local_time->tm_mday, local_time->tm_hour, local_time->tm_min, localMins);
+	
+	if(local_time->tm_mday != utc_time->tm_mday){
+		sameDay = false;
+		DEBUG_TRACE_D(_EXPR_, _MODULE_, "Diferente dia");
+		
+		if(localMins > utcMins)
+			diff_hours = (1440+utcMins) - localMins;
+		else
+			diff_hours = (1440+localMins) - utcMins;
+	}
+	else{
+		diff_hours = abs(localMins - utcMins);
+	}
+
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Diferencia GMT: %d", diff_hours);
+
+	return diff_hours;
+}
+
+void AstCalendar::duskDawnCalc(){
+	uint16_t sunrise = 0;
+	uint16_t sunset = 0;
+	uint8_t isAllDay = 0;
+	uint8_t isAllNight = 0;
+
+	int16_t corrSunrise = 0;
+	int16_t corrSunset = 0;
+
+	time_t t = time(NULL);
+	tm local;
+	local = *localtime(&t);
+	CALENDAR_T cal = initializeCalendar(local);
+	double _lat = _astdata.clock.cfg.geoloc.coords[0];
+	double _lng = _astdata.clock.cfg.geoloc.coords[1];
+	COORD_T lat = initializeCoord(_lat);
+	COORD_T lng = initializeCoord(_lng);
+
+
+	time_t tnow = time(NULL);
+	localtime_r(&tnow, &_now);
+
+	tm _gmtime = *gmtime(&t);
+	tm _localtime = *localtime(&t);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
+	int16_t gmt = gmtDesviation(&_gmtime, &_localtime);
+
+	zoneCalculateSuntimes(&cal, gmt, &lat, &lng, corrSunrise, corrSunset, &sunrise, &sunset,&isAllDay, &isAllNight);
+	
+	// Pasamos a time_t la hora de orto y ocaso
+	// los minutos de orto y ocaso los dan en local
+	// Si lo hacemos a las 00 es tan facil como sumarle al time_t actual los minutos calculados porque son para ese día
+	time_t tnow2 = time(NULL);
+	tm now, newDateSunrise, newDateSunset;
+	localtime_r(&tnow2, &now);
+	uint32_t currMinutes = (now.tm_hour * 60) + now.tm_min;
+	newDateSunrise = now;
+	newDateSunset = now;
+	newDateSunrise.tm_hour = sunrise / 60;
+	newDateSunrise.tm_min = sunrise % 60;
+	newDateSunset.tm_hour = sunset / 60;
+	newDateSunset.tm_min = sunset % 60;
+	_astdata.clock.stat.dawn = mktime(&newDateSunrise);
+	_astdata.clock.stat.dusk = mktime(&newDateSunset);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Sunrise: %d(%d:%d), Sunset: %d(%d:%d)", sunrise, sunrise/60, sunrise%60, sunset, sunset/60, sunset%60);
+	_curr_sun = -1; //para publicar el estado actual
+}
+
 //------------------------------------------------------------------------------------
 void AstCalendar::eventSimulatorCb() {
 	uint32_t flags = CalendarClockNoEvents;
@@ -106,6 +186,8 @@ void AstCalendar::eventSimulatorCb() {
 			}
 			if(_now.tm_hour == 0){
 				flags |= CalendarClockDayEvt;
+				// Calculamos el amanecer y atardecer
+				duskDawnCalc();
 				if(_now.tm_wday == 1){
 					flags |= CalendarClockWeekEvt;
 				}
@@ -126,6 +208,17 @@ void AstCalendar::eventSimulatorCb() {
 		flags |= CalendarClockVIEvt;
 		_curr_dst = _now.tm_isdst;
 	}
+	//Orto y ocaso
+	if((_curr_sun == 0 || _curr_sun == -1) && (t > _astdata.clock.stat.dawn && t < _astdata.clock.stat.dusk)){
+		flags |= CalendarClockDawnEvt;
+		_curr_sun = 1;
+	}
+	else if((_curr_sun == 1 || _curr_sun == -1) && (t > _astdata.clock.stat.dusk)){
+		flags |= CalendarClockDuskEvt;
+		_curr_sun = 0;
+	}
+
+
 
 	// actualiza variables de estado
 	_astdata.clock.stat.localtime = t;
@@ -250,7 +343,7 @@ double AstCalendar::own_abs(double x){
 }
 
 //------------------------------------------------------------------------------------
-int8_t AstCalendar::Zone_CalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight){
+int8_t AstCalendar::zoneCalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight){
 	double Lon, Lat;
 	double JD, J1, P, AM, V, L, O_B, DC;
 	double AR, ET, H0, VD, DCOR, HORTO;

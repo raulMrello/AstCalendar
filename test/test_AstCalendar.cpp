@@ -252,7 +252,7 @@ TEST_CASE("Orto  y ocaso ........................", "[AstCalendar]"){
 	lng.Signo = -1;
 	int16_t gmt = 120; // en octubre pasamos a 60
 
-	astcal->Zone_CalculateSuntimes(&cal, gmt, &lat, &lng, corrSunrise, corrSunset, &sunrise, &sunset,&isAllDay, &isAllNight);
+	astcal->zoneCalculateSuntimes(&cal, gmt, &lat, &lng, corrSunrise, corrSunset, &sunrise, &sunset,&isAllDay, &isAllNight);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "GMT2 - 27-10-2023 Sunrise: %d(%d:%d), Sunset: %d(%d:%d)", sunrise, sunrise/60, sunrise%60, sunset, sunset/60, sunset%60);
 
 	// Probamos el calculo a 1 de noviembre

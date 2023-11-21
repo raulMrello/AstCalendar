@@ -44,6 +44,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
         	}
         	Heap::memFree(sub_topic_local);
 
+			duskDawnCalc();
         	// marca como componente iniciado
         	_ready = true;
             return State::HANDLED;
@@ -87,7 +88,8 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				Heap::memFree(pub_topic);
 				return State::HANDLED;
         	}
-
+			//recalculamos horas de orto y ocaso
+			duskDawnCalc();
         	// almacena en el sistema de ficheros
         	saveConfig();
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Config actualizada");
@@ -177,6 +179,8 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			}
 			time_t sysTime;
 			time(&sysTime);
+			//recalculamos horas de orto y ocaso
+			duskDawnCalc();
 
 			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Notificando localtime");
 			char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());

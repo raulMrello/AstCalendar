@@ -100,9 +100,18 @@ class AstCalendar : public ActiveModule {
      * @param isAllNight Flag que se activa si resulta ser un dia sin orto
      * @return codigo de error <= 0
      */
-    int8_t Zone_CalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight);
+    int8_t zoneCalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight);
 
+    /**
+     * @brief Calculo de la desviacion respecto GMT en minutos
+     * 
+     * @param utc_time 
+     * @param local_time 
+     * @return int desviacion en minutos
+     */
+    int gmtDesviation(struct tm* utc_time , struct tm* local_time);
 
+    void duskDawnCalc();
   private:
 
     /** M�ximo n�mero de mensajes alojables en la cola asociada a la m�quina de estados */
@@ -143,6 +152,7 @@ class AstCalendar : public ActiveModule {
     bool _ntp_enabled;
     time_t _last_rtc_time;
     int _curr_dst;
+    int _curr_sun;
 
 
  	/** Interfaz para manejar los eventos en la m�quina de estados por defecto

@@ -286,6 +286,7 @@ typedef struct {
   	uint8_t date; 
   	uint8_t year;		//a partir del 2000, 23 = 2023
 	uint8_t _NAN;
+	
 }CALENDAR_T;
 
 // Estructura de un objeto coordenada en formato DMS
@@ -299,9 +300,11 @@ typedef struct{
 	int8_t	Minutos;
 	int8_t	Segundos;
 	int8_t  Signo; 		//1: positivo, -1: negativo
+
 }COORD_T;
 
-
+COORD_T initializeCoord(double coord);
+CALENDAR_T initializeCalendar(tm _tm);
 
 namespace JSON {
 
