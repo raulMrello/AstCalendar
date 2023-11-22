@@ -246,6 +246,7 @@ struct calendar_clock_stat{
 	time_t	 localtime;
 	time_t   dawn;
 	time_t   dusk;
+	bool	 dayTime;
 };
 
 

@@ -223,6 +223,7 @@ void AstCalendar::eventSimulatorCb() {
 	// actualiza variables de estado
 	_astdata.clock.stat.localtime = t;
 	_astdata.clock.stat.flags = flags;
+	_curr_sun == 1 ?_astdata.clock.stat.dayTime = true : _astdata.clock.stat.dayTime = false;
 
 	// si hay flags que notificar...
 	if((flags & _astdata.cfg.evtFlags)!=0){
@@ -245,6 +246,31 @@ void AstCalendar::eventSimulatorCb() {
 		}
 		Heap::memFree(pub_topic);
 		delete(notif);
+
+		if(_astdata.clock.stat.flags & CalendarClockDawnEvt || _astdata.clock.stat.flags & CalendarClockDuskEvt){
+			// crea el objeto a notificar
+			notif = new Blob::NotificationData_t<calendar_manager>(_astdata);
+			MBED_ASSERT(notif);
+
+			pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
+			MBED_ASSERT(pub_topic);
+			if(_astdata.clock.stat.flags & CalendarClockDawnEvt)
+				sprintf(pub_topic, "stat/orto/%s", _pub_topic_base);
+			else
+				sprintf(pub_topic, "stat/ocaso/%s", _pub_topic_base);
+
+			if(_json_supported){
+				cJSON* jstat = JsonParser::getJsonFromNotification(*notif, ObjSelectAll);
+				MBED_ASSERT(jstat);
+				MQ::MQClient::publish(pub_topic, &jstat, sizeof(cJSON**), &_publicationCb);
+				cJSON_Delete(jstat);
+			}
+			else {
+				MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<calendar_manager>), &_publicationCb);
+			}
+			Heap::memFree(pub_topic);
+			delete(notif);
+		}
 	}
 }
 
