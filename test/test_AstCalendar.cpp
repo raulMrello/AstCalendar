@@ -42,6 +42,61 @@ static calendar_manager calendar = {0};
 static const char* _MODULE_ = "[TEST_AstCal]...";
 #define _EXPR_	(true)
 
+const uint8_t cities = 13
+const double coords[cities][cities];
+const char* citiesNames[cities][15] = {"Milan", "Torino", "Roma", "Napoli", "Palermo", "Genova", "Bologna", "Florencia", "Bari", "Catania", "Venecia", "Verona", "Messina"};
+const uint8_t milan = 0;
+coords[milan][milan] = 45.4642;
+coords[milan][milan+1] = 9.1900;
+
+const uint8_t torino = 1;
+coords[torino][torino] = 45.0703;
+coords[torino][torino+1] = 7.6869;
+
+const uint8_t roma = 2;
+coords[roma][roma] = 41.9028;
+coords[roma][roma+1] = 12.4964;
+
+const uint8_t napoli = 3;
+coords[napoli][napoli] = 40.8518;
+coords[napoli][napoli+1] = 14.2681;
+
+const uint8_t palermo = 4;
+coords[palermo][palermo] = 38.1157;
+coords[palermo][palermo+1] = 13.3613;
+
+const uint8_t genova = 5;
+coords[genova][genova] = 44.4056;
+coords[genova][genova+1] = 8.9463;
+
+const uint8_t bologna = 6;
+coords[bologna][bologna] = 44.4949;
+coords[bologna][bologna]+1 = 11.3426;
+
+const uint8_t florencia = 7;
+coords[florencia][florencia] = 43.7696;
+coords[florencia][florencia+1] = 11.2558;
+
+const uint8_t bari = 8;
+coords[bari][bari] = 41.1172;
+coords[bari][bari+1] = 16.8719;
+
+const uint8_t catania = 9;
+coords[catania][catania] = 37.5022;
+coords[catania][catania+1] = 15.0873;
+
+const uint8_t venecia = 10;
+coords[venecia][venecia] = 45.4408;
+coords[venecia][venecia+1] = 12.3155;
+
+const uint8_t verona = 11;
+coords[verona][verona] = 45.4384;
+coords[verona][verona+1] = 10.9916;
+
+const uint8_t messina = 12;
+coords[messina][messina] = 38.1937;
+coords[messina][messina+1] = 15.5542;
+
 
 
 //------------------------------------------------------------------------------------
@@ -263,38 +318,6 @@ TEST_CASE("Orto  y ocaso ........................", "[AstCalendar]"){
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "GMT1 - 01-11-2023 Sunrise: %d(%d:%d), Sunset: %d(%d:%d)", sunrise, sunrise/60, sunrise%60, sunset, sunset/60, sunset%60);
 	
 }
-int diffff(struct tm* utc_time , struct tm* local_time ){
-	DEBUG_TRACE_E(_EXPR_, _MODULE_, "Diferencia de horas");
-	
-	bool sameDay = true;
-	int gmtDiff = 0;
-	int utcMins = 0;
-	int localMins = 0;
-	int diff_hours = 0;
-	
-	utcMins = utc_time->tm_hour*60 + utc_time->tm_min;
-	localMins = local_time->tm_hour*60 + local_time->tm_min;
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC[dia: %d]: %d:%d -> %d", utc_time->tm_mday, utc_time->tm_hour, utc_time->tm_min, utcMins);
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "LCL[dia: %d]: %d:%d -> %d", local_time->tm_mday, local_time->tm_hour, local_time->tm_min, localMins);
-	
-	if(local_time->tm_mday != utc_time->tm_mday){
-		sameDay = false;
-		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Diferente dia");
-		
-		if(localMins > utcMins)
-			diff_hours = (1440+utcMins) - localMins;
-		else
-			diff_hours = (1440+localMins) - utcMins;
-	}
-	else{
-		diff_hours = abs(localMins - utcMins);
-	}
-
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Diferencia: %d", diff_hours);
-
-	return diff_hours;
-}
-
 
 TEST_CASE("Cambios de hora mismo dia ........................", "[AstCalendar]"){
 	char timezone[] = "GMT-1GMT-2,M3.5.0/2,M10.5.0";
@@ -303,15 +326,16 @@ TEST_CASE("Cambios de hora mismo dia ........................", "[AstCalendar]")
 	tzset() ;
 	
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", timezone);
+	// 23/11/2023 01:00
 	_now.tm_sec  = 0;
 	_now.tm_min  = 0;
-	_now.tm_hour = 8;
-	_now.tm_mday = 27;
-	_now.tm_wday = 5;
-	_now.tm_mon  = 9;
+	_now.tm_hour = 1;
+	_now.tm_mday = 23;
+	_now.tm_wday = 4;
+	_now.tm_mon  = 10;
 	_now.tm_year = 2023 - 1900;
-	_now.tm_yday = 300;
-	_now.tm_isdst = 1;
+	_now.tm_yday = 327;
+	_now.tm_isdst = 0;
 	std::time_t utc = cpp_utils::timegm(&_now);
 	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %d", (int)utc);
 	
@@ -331,9 +355,38 @@ TEST_CASE("Cambios de hora mismo dia ........................", "[AstCalendar]")
 	tm _localtime = *localtime(&t);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
-	int diferencia = diffff(&_gmtime, &_localtime);
+	int diferencia = astcal->gmtDesviation(&_gmtime, &_localtime);
 
 	DEBUG_TRACE_I(_EXPR_ ,_MODULE_, "Diferencia en minutos: %d",diferencia);
+
+}
+
+TEST_CASE("[ITALIA] - Cambios de hora mismo dia ........................", "[AstCalendar]"){
+	char timezone[] = "GMT-1GMT-2,M3.5.0/2,M10.5.0";
+	tm _now;
+	setenv("TZ", timezone, 1);
+	tzset() ;
+	
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Establece zona horaria '%s'", timezone);
+	// 23/11/2023 01:00
+	_now.tm_sec  = 0;
+	_now.tm_min  = 0;
+	_now.tm_hour = 1;
+	_now.tm_mday = 23;
+	_now.tm_wday = 4;
+	_now.tm_mon  = 10;
+	_now.tm_year = 2023 - 1900;
+	_now.tm_yday = 327;
+	_now.tm_isdst = 0;
+	std::time_t utc = cpp_utils::timegm(&_now);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %d", (int)utc);
+	
+	for(uint8_t i = 0; i < cities; i++){
+		DEBUG_TRACE_I(_EXPR_, _MODULE_, "Ciudad: %s", citiesNames[i]);
+		_astdata.clock.cfg.geoloc.coords[0] = coords[i][0];
+		_astdata.clock.cfg.geoloc.coords[1] = coords[i][1];
+		astcal->duskDawnCalc();
+	}
 
 }
 
@@ -372,7 +425,7 @@ TEST_CASE("Cambios de hora diferente dia ........................", "[AstCalenda
 	tm _localtime = *localtime(&t);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
-	int diferencia = diffff(&_gmtime, &_localtime);
+	int diferencia = astcal->gmtDesviation(&_gmtime, &_localtime);
 
 	DEBUG_TRACE_I(_EXPR_ ,_MODULE_, "Diferencia en minutos: %d",diferencia);
 
@@ -413,7 +466,7 @@ TEST_CASE("Cambios de hora diferente dia 2 ........................", "[AstCalen
 	tm _localtime = *localtime(&t);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
-	int diferencia = diffff(&_gmtime, &_localtime);
+	int diferencia = astcal->gmtDesviation(&_gmtime, &_localtime);
 
 	DEBUG_TRACE_I(_EXPR_ ,_MODULE_, "Diferencia en minutos: %d",diferencia);
 
@@ -454,7 +507,7 @@ TEST_CASE("Cambios de hora  ........................", "[AstCalendar]"){
 	tm _localtime = *localtime(&t);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "UTC:   %s", asctime(&_gmtime));
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "local: %s", asctime(&_localtime));
-	int diferencia = diffff(&_gmtime, &_localtime);
+	int diferencia = astcal->gmtDesviation(&_gmtime, &_localtime);
 
 	DEBUG_TRACE_I(_EXPR_ ,_MODULE_, "Diferencia en minutos: %d",diferencia);
 
