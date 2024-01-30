@@ -209,11 +209,15 @@ void AstCalendar::eventSimulatorCb() {
 		_curr_dst = _now.tm_isdst;
 	}
 	//Orto y ocaso
-	if((_curr_sun == 0 || _curr_sun == -1) && (t > _astdata.clock.stat.dawn && t < _astdata.clock.stat.dusk)){
+	uint32_t dawnCorr = (uint32_t)_astdata.clock.cfg.geoloc.astCorr[0][0]*60;//a segundos
+	uint32_t duskCorr = (uint32_t)_astdata.clock.cfg.geoloc.astCorr[0][1]*60;
+	uint32_t dawnTrigger = (uint32_t)_astdata.clock.stat.dawn + dawnCorr;
+	uint32_t duskTrigger = (uint32_t)_astdata.clock.stat.dusk + duskCorr;
+	if((_curr_sun == 0 || _curr_sun == -1) && (t > dawnTrigger && t < duskTrigger)){
 		flags |= CalendarClockDawnEvt;
 		_curr_sun = 1;
 	}
-	else if((_curr_sun == 1 || _curr_sun == -1) && (t > _astdata.clock.stat.dusk)){
+	else if((_curr_sun == 1 || _curr_sun == -1) && (t > duskTrigger)){
 		flags |= CalendarClockDuskEvt;
 		_curr_sun = 0;
 	}
