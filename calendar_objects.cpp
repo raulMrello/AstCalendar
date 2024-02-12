@@ -322,6 +322,7 @@ uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json){
 uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 	uint32_t subkey = 0;
 	cJSON* value = NULL;
+	cJSON* stat = NULL;
 	obj._keys = 0;
 	if(json == NULL){
 		return 0;
@@ -341,24 +342,24 @@ uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 
 	// stat
 	subkey = 0;
-	if((value = cJSON_GetObjectItem(json, JsonParser::p_stat)) != NULL){
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_flags)) != NULL){
+	if((stat = cJSON_GetObjectItem(json, JsonParser::p_stat)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_flags)) != NULL){
 			obj.stat.flags = value->valueint;
 		}
 		// si el periodo no est� presente, lo marca como inv�lido (=-1)
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_period)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_period)) != NULL){
 			obj.stat.period = value->valueint;
 		}
 		else{
 			obj.stat.period = -1;
 		}
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_localtime)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_localtime)) != NULL){
 			obj.stat.localtime = (time_t)value->valuedouble;
 		}
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_dawn)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_dawn)) != NULL){
 			obj.stat.dawn = (time_t)value->valuedouble;
 		}
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_dusk)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_dusk)) != NULL){
 			obj.stat.dusk = (time_t)value->valuedouble;
 		}
 		subkey = (1 << 2);

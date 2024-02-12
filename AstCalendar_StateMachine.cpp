@@ -151,21 +151,23 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 
         // Procesa datos recibidos de la publicaci�n en get/boot
         case RecvBootGet:{
+			Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
 			char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 			MBED_ASSERT(pub_topic);
 			sprintf(pub_topic, "stat/boot/%s", _pub_topic_base);
-			Blob::NotificationData_t<calendar_manager> *notif = new Blob::NotificationData_t<calendar_manager>(_astdata);
-			MBED_ASSERT(notif);
+			
+			Blob::Response_t<calendar_manager> *resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
+			MBED_ASSERT(resp);
 			if(_json_supported){
-				cJSON* jboot = JsonParser::getJsonFromNotification<calendar_manager>(*notif, ObjSelectAll);
+				cJSON* jboot = JsonParser::getJsonFromResponse<calendar_manager>(*resp, ObjSelectAll);
 				MBED_ASSERT(jboot);
 				MQ::MQClient::publish(pub_topic, &jboot, sizeof(cJSON**), &_publicationCb);
 				cJSON_Delete(jboot);
 			}
 			else {
-				MQ::MQClient::publish(pub_topic, notif, sizeof(Blob::NotificationData_t<calendar_manager>), &_publicationCb);
+				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
 			}
-			delete(notif);
+			delete(resp);
 			Heap::memFree(pub_topic);
 			return State::HANDLED;
         }
@@ -203,7 +205,54 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			return State::HANDLED;
         }
 
-        case State::EV_EXIT:{
+        case RcvOrtoGet:{
+			Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
+        	// prepara el topic al que responder
+        	char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
+			MBED_ASSERT(pub_topic);
+			sprintf(pub_topic, "stat/orto/%s", _pub_topic_base);
+
+			// responde con los datos solicitados y con los errores (si hubiera) de la decodificaci�n de la solicitud
+			Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
+			MBED_ASSERT(resp);
+			if(_json_supported){
+				cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectState);
+				MBED_ASSERT(jresp);
+				MQ::MQClient::publish(pub_topic, &jresp, sizeof(cJSON**), &_publicationCb);
+				cJSON_Delete(jresp);
+			}
+			else{
+				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
+			}
+			delete(resp);
+			Heap::memFree(pub_topic);
+			return State::HANDLED;
+		}
+
+		case RcvOcasoGet:{
+			Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
+        	// prepara el topic al que responder
+        	char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
+			MBED_ASSERT(pub_topic);
+			sprintf(pub_topic, "stat/ocaso/%s", _pub_topic_base);
+
+			// responde con los datos solicitados y con los errores (si hubiera) de la decodificaci�n de la solicitud
+			Blob::Response_t<calendar_manager>* resp = new Blob::Response_t<calendar_manager>(req->idTrans, req->_error, _astdata);
+			MBED_ASSERT(resp);
+			if(_json_supported){
+				cJSON* jresp = JsonParser::getJsonFromResponse(*resp, ObjSelectState);
+				MBED_ASSERT(jresp);
+				MQ::MQClient::publish(pub_topic, &jresp, sizeof(cJSON**), &_publicationCb);
+				cJSON_Delete(jresp);
+			}
+			else{
+				MQ::MQClient::publish(pub_topic, resp, sizeof(Blob::Response_t<calendar_manager>), &_publicationCb);
+			}
+			delete(resp);
+			Heap::memFree(pub_topic);
+			return State::HANDLED;
+		}
+		case State::EV_EXIT:{
             nextState();
             return State::HANDLED;
         }
