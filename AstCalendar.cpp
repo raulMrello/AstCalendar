@@ -99,7 +99,7 @@ int AstCalendar::gmtDesviation(struct tm* utc_time , struct tm* local_time ){
 			diff_hours = (1440+localMins) - utcMins;
 	}
 	else{
-		diff_hours = abs(localMins - utcMins);
+		diff_hours = (localMins - utcMins);
 	}
 
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Diferencia GMT: %d", diff_hours);
