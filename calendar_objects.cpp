@@ -145,6 +145,8 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 		cJSON_AddNumberToObject(stat, JsonParser::p_localtime, obj.stat.localtime);
 		cJSON_AddNumberToObject(stat, JsonParser::p_dawn, obj.stat.dawn);
 		cJSON_AddNumberToObject(stat, JsonParser::p_dusk, obj.stat.dusk);
+		cJSON_AddNumberToObject(stat, JsonParser::p_dawnCorr, obj.stat.dawnWithCorr);
+		cJSON_AddNumberToObject(stat, JsonParser::p_duskCorr, obj.stat.duskWithCorr);
 		cJSON_AddItemToObject(json, JsonParser::p_stat, stat);
 	}
 	return json;
@@ -361,6 +363,12 @@ uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 		}
 		if((value = cJSON_GetObjectItem(stat,JsonParser::p_dusk)) != NULL){
 			obj.stat.dusk = (time_t)value->valuedouble;
+		}
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_dawnCorr)) != NULL){
+			obj.stat.dawnWithCorr = (time_t)value->valuedouble;
+		}
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_duskCorr)) != NULL){
+			obj.stat.duskWithCorr = (time_t)value->valuedouble;
 		}
 		subkey = (1 << 2);
 	}

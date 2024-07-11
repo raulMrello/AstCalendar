@@ -154,6 +154,51 @@ void AstCalendar::duskDawnCalc(){
 	_astdata.clock.stat.dusk = mktime(&newDateSunset);
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Sunrise: %d(%d:%d), Sunset: %d(%d:%d)", sunrise, sunrise/60, sunrise%60, sunset, sunset/60, sunset%60);
 	_curr_sun = -1; //para publicar el estado actual
+
+	//Orto y ocaso
+	uint32_t dawnCorr = (uint32_t)_astdata.clock.cfg.geoloc.astCorr[0][0]*60;//a segundos
+	uint32_t duskCorr = (uint32_t)_astdata.clock.cfg.geoloc.astCorr[0][1]*60;
+	_astdata.clock.stat.dawnWithCorr = _astdata.clock.stat.dawn + dawnCorr;
+	_astdata.clock.stat.duskWithCorr = _astdata.clock.stat.dusk + duskCorr;
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn correcciones: %d", (uint32_t)_astdata.clock.stat.dawnWithCorr);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk correcciones ayer: %d", (uint32_t)_astdata.clock.stat.duskWithCorr);
+	// Evaluamos si el orto y el ocaso con correcciones se dan en diferentes dias con respecto a dawnCorr y duskCorr
+	// Convertimos a hora local dawnCorr y duskCorr para ver en que día se dan
+	tm dawnCorrTm;tm duskCorrTm;
+	localtime_r(&_astdata.clock.stat.dawn,&dawnCorrTm);
+	localtime_r(&_astdata.clock.stat.dusk,&duskCorrTm);
+
+	tm dawnTriggerTm; tm duskTriggerTm;
+	localtime_r(&_astdata.clock.stat.dawnWithCorr,&dawnTriggerTm);
+	localtime_r(&_astdata.clock.stat.duskWithCorr,&duskTriggerTm);
+
+	if(dawnCorrTm.tm_mday != dawnTriggerTm.tm_mday){
+		if(dawnCorrTm.tm_mday > dawnTriggerTm.tm_mday){
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn tras correcciones ayer: %d", (uint32_t)_astdata.clock.stat.dawnWithCorr);
+			// dawnCorr es del día anterior
+			// nos vamos al dia siguiente porque seguro que su orto se mete en el dia actual
+			_astdata.clock.stat.dawnWithCorr += 86400;
+		}
+		else{
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn tras correcciones mañana: %d", (uint32_t)_astdata.clock.stat.dawnWithCorr);
+			// dawnCorr es del día siguiente
+			_astdata.clock.stat.dawnWithCorr -= 86400;
+		}
+	}
+	if (duskCorrTm.tm_mday != duskTriggerTm.tm_mday){
+		if(duskCorrTm.tm_mday > duskTriggerTm.tm_mday){
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk tras correcciones ayer: %d", (uint32_t)_astdata.clock.stat.duskWithCorr);
+			// duskCorr es del día anterior
+			_astdata.clock.stat.duskWithCorr += 86400;
+		}
+		else{
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk tras correcciones mañana: %d", (uint32_t)_astdata.clock.stat.duskWithCorr);
+			// duskCorr es del día siguiente
+			_astdata.clock.stat.duskWithCorr -= 86400;
+		}
+	}
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Tras correcciones -> Sunrise: %d, Sunset: %d", (uint32_t)_astdata.clock.stat.dawnWithCorr, (uint32_t)_astdata.clock.stat.duskWithCorr);
+
 }
 
 //------------------------------------------------------------------------------------
@@ -209,20 +254,33 @@ void AstCalendar::eventSimulatorCb() {
 		_curr_dst = _now.tm_isdst;
 	}
 	//Orto y ocaso
-	uint32_t dawnCorr = (uint32_t)_astdata.clock.cfg.geoloc.astCorr[0][0]*60;//a segundos
-	uint32_t duskCorr = (uint32_t)_astdata.clock.cfg.geoloc.astCorr[0][1]*60;
-	uint32_t dawnTrigger = (uint32_t)_astdata.clock.stat.dawn + dawnCorr;
-	uint32_t duskTrigger = (uint32_t)_astdata.clock.stat.dusk + duskCorr;
-	if((_curr_sun == 0 || _curr_sun == -1) && (t > dawnTrigger && t < duskTrigger)){
-		flags |= CalendarClockDawnEvt;
-		_curr_sun = 1;
+	uint32_t _curr_sun_new = 0;
+	uint32_t flagsDawnDusk = 0;
+	DEBUG_TRACE_D(_EXPR_,_MODULE_,"Hora actual: %d, Orto: %d, Ocaso: %d", (uint32_t)t, (uint32_t)_astdata.clock.stat.dawnWithCorr, (uint32_t)_astdata.clock.stat.duskWithCorr);
+	if(_astdata.clock.stat.dawnWithCorr < _astdata.clock.stat.duskWithCorr){
+		if(t >= _astdata.clock.stat.dawnWithCorr && t < _astdata.clock.stat.duskWithCorr){
+			flagsDawnDusk |= CalendarClockDawnEvt;
+			_curr_sun_new = 1;
+		}
+		else{
+			flagsDawnDusk |= CalendarClockDuskEvt;
+			_curr_sun_new = 0;
+		}
 	}
-	else if((_curr_sun == 1 || _curr_sun == -1) && (t > duskTrigger)){
-		flags |= CalendarClockDuskEvt;
-		_curr_sun = 0;
+	else{
+		if(t >= _astdata.clock.stat.dawnWithCorr || t < _astdata.clock.stat.duskWithCorr){
+			flagsDawnDusk |= CalendarClockDawnEvt;
+			_curr_sun_new = 1;
+		}
+		else{
+			flagsDawnDusk |= CalendarClockDuskEvt;
+			_curr_sun_new = 0;
+		}
 	}
-
-
+	if(_curr_sun == -1 || _curr_sun != _curr_sun_new){
+		_curr_sun = _curr_sun_new;
+		flags |= flagsDawnDusk;
+	}
 
 	// actualiza variables de estado
 	_astdata.clock.stat.localtime = t;
