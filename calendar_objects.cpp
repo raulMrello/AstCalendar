@@ -16,6 +16,56 @@
 static const char* _MODULE_ = "[calendar:].....";
 #define _EXPR_	(!IS_ISR())
 
+char* calendarClockStatFlags2String(calendar_clock_stat_flags flags){
+	switch(flags){
+		case CalendarClockNoEvents:			return (char*)"CalendarClockNoEvents";
+		case CalendarClockYearEvt:			return (char*)"CalendarClockYearEvt";
+		case CalendarClockIVEvt:			return (char*)"CalendarClockIVEvt";
+		case CalendarClockVIEvt:			return (char*)"CalendarClockVIEvt";
+		case CalendarClockMonthEvt:			return (char*)"CalendarClockMonthEvt";
+		case CalendarClockWeekEvt:			return (char*)"CalendarClockWeekEvt";
+		case CalendarClockDayEvt:			return (char*)"CalendarClockDayEvt";
+		case CalendarClockMiddayEvt:		return (char*)"CalendarClockMiddayEvt";
+		case CalendarClockPreDuskEvt:		return (char*)"CalendarClockPreDuskEvt";
+		case CalendarClockDuskEvt:			return (char*)"CalendarClockDuskEvt";
+		case CalendarClockPostDuskEvt:		return (char*)"CalendarClockPostDuskEvt";
+		case CalendarClockReducStartEvt:	return (char*)"CalendarClockReducStartEvt";
+		case CalendarClockReducStopEvt:		return (char*)"CalendarClockReducStopEvt";
+		case CalendarClockPreDawnEvt:		return (char*)"CalendarClockPreDawnEvt";
+		case CalendarClockDawnEvt:			return (char*)"CalendarClockDawnEvt";
+		case CalendarClockPostDawnEvt:		return (char*)"CalendarClockPostDawnEvt";
+		case CalendarClockHourEvt:			return (char*)"CalendarClockHourEvt";
+		case CalendarClockMinEvt:			return (char*)"CalendarClockMinEvt";
+		case CalendarClockSecEvt:			return (char*)"CalendarClockSecEvt";
+		case CalendarClockDawnDuskUpdEvt:	return (char*)"CalendarClockDawnDuskUpdEvt";
+		case CalendarClockPeriodEvt:		return (char*)"CalendarClockPeriodEvt";
+		case CalendarClockNTPEvt:			return (char*)"CalendarClockNTPEvt";
+		case CalendarClockEvtINVALID:		return (char*)"CalendarClockEvtINVALID";
+		default:							return (char*)"CalendarClockEvtUNKNOWN";
+	}
+}
+
+COORD_T initializeCoord(double coord){
+	COORD_T coord_t;
+	coord_t.Grados = (int16_t)coord;
+	coord_t.Minutos = abs((int8_t)((coord - coord_t.Grados)*60));
+	coord_t.Segundos = abs((int8_t)((((coord - coord_t.Grados)*60) - coord_t.Minutos)*60));
+	coord_t.Signo = (coord < 0)?-1:1;
+	return coord_t;
+}
+
+CALENDAR_T initializeCalendar(tm _tm){
+	CALENDAR_T cal;
+	cal.hour = _tm.tm_hour;
+	cal.minute = _tm.tm_min;
+	cal.second = _tm.tm_sec;
+	cal.weekday = _tm.tm_wday;
+	cal.month = _tm.tm_mon + 1;
+	cal.date = _tm.tm_mday;
+	cal.year = _tm.tm_year - 100;
+	cal._NAN = 0;
+	return cal;
+}
 
 namespace JSON{
 
@@ -95,6 +145,8 @@ cJSON* getJsonFromCalendarClock(const calendar_clock& obj, ObjDataSelection type
 		cJSON_AddNumberToObject(stat, JsonParser::p_localtime, obj.stat.localtime);
 		cJSON_AddNumberToObject(stat, JsonParser::p_dawn, obj.stat.dawn);
 		cJSON_AddNumberToObject(stat, JsonParser::p_dusk, obj.stat.dusk);
+		cJSON_AddNumberToObject(stat, JsonParser::p_dawnCorr, obj.stat.dawnWithCorr);
+		cJSON_AddNumberToObject(stat, JsonParser::p_duskCorr, obj.stat.duskWithCorr);
 		cJSON_AddItemToObject(json, JsonParser::p_stat, stat);
 	}
 	return json;
@@ -272,6 +324,7 @@ uint32_t getCalendarManagerFromJson(calendar_manager &obj, cJSON* json){
 uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 	uint32_t subkey = 0;
 	cJSON* value = NULL;
+	cJSON* stat = NULL;
 	obj._keys = 0;
 	if(json == NULL){
 		return 0;
@@ -291,25 +344,31 @@ uint32_t getCalendarClockFromJson(calendar_clock &obj, cJSON* json){
 
 	// stat
 	subkey = 0;
-	if((value = cJSON_GetObjectItem(json, JsonParser::p_stat)) != NULL){
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_flags)) != NULL){
+	if((stat = cJSON_GetObjectItem(json, JsonParser::p_stat)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_flags)) != NULL){
 			obj.stat.flags = value->valueint;
 		}
 		// si el periodo no est� presente, lo marca como inv�lido (=-1)
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_period)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_period)) != NULL){
 			obj.stat.period = value->valueint;
 		}
 		else{
 			obj.stat.period = -1;
 		}
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_localtime)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_localtime)) != NULL){
 			obj.stat.localtime = (time_t)value->valuedouble;
 		}
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_dawn)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_dawn)) != NULL){
 			obj.stat.dawn = (time_t)value->valuedouble;
 		}
-		if((value = cJSON_GetObjectItem(json,JsonParser::p_dusk)) != NULL){
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_dusk)) != NULL){
 			obj.stat.dusk = (time_t)value->valuedouble;
+		}
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_dawnCorr)) != NULL){
+			obj.stat.dawnWithCorr = (time_t)value->valuedouble;
+		}
+		if((value = cJSON_GetObjectItem(stat,JsonParser::p_duskCorr)) != NULL){
+			obj.stat.duskWithCorr = (time_t)value->valuedouble;
 		}
 		subkey = (1 << 2);
 	}

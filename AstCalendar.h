@@ -86,8 +86,32 @@ class AstCalendar : public ActiveModule {
 	 * Segundos transcurridos desde el ultimo reset
 	 */
     time_t GetSecondFromReset();
+    /**
+     * Calcula la hora de orto y ocaso dada una fecha y una localizacion
+     * @param cal Referencia al calendario
+     * @param gmt GMT aplicable al calculo en minutos
+     * @param lat Referencia a la latitud
+     * @param lng Referencia a la longitud
+     * @param corrSunrise Correccion aplicable al resultado de orto
+     * @param corrSunset Correccion aplicable al resultado de ocaso
+     * @param sunrise Resultado de orto
+     * @param sunset Resultado de ocaso
+     * @param isAllDay Flag que se activa si resulta ser un dia sin ocaso
+     * @param isAllNight Flag que se activa si resulta ser un dia sin orto
+     * @return codigo de error <= 0
+     */
+    int8_t zoneCalculateSuntimes(CALENDAR_T *cal, int16_t gmt, COORD_T *lat, COORD_T *lng, int16_t corrSunrise, int16_t corrSunset, uint16_t * sunrise, uint16_t *sunset, uint8_t *isAllDay, uint8_t *isAllNight);
 
+    /**
+     * @brief Calculo de la desviacion respecto GMT en minutos
+     * 
+     * @param utc_time 
+     * @param local_time 
+     * @return int desviacion en minutos
+     */
+    int gmtDesviation(struct tm* utc_time , struct tm* local_time);
 
+    void duskDawnCalc();
   private:
 
     /** M�ximo n�mero de mensajes alojables en la cola asociada a la m�quina de estados */
@@ -98,8 +122,10 @@ class AstCalendar : public ActiveModule {
     	RecvCfgSet 	 = (State::EV_RESERVED_USER << 0),  /// Flag activado al recibir mensaje en "set/cfg"
     	RecvCfgGet	 = (State::EV_RESERVED_USER << 1),  /// Flag activado al recibir mensaje en "get/cfg"
     	RecvBootGet	  = (State::EV_RESERVED_USER << 2),  /// Flag activado al recibir mensaje en "get/boot"
-		RecvRtcSet    = (State::EV_RESERVED_USER << 3),
-		RcvSetDefault   = (State::EV_RESERVED_USER << 4)
+		  RecvRtcSet    = (State::EV_RESERVED_USER << 3),
+		  RcvSetDefault   = (State::EV_RESERVED_USER << 4),
+      RcvOrtoGet = (State::EV_RESERVED_USER << 5),
+      RcvOcasoGet = (State::EV_RESERVED_USER << 6)
     };
 
     /** Datos de configuraci�n y estado */
@@ -127,6 +153,8 @@ class AstCalendar : public ActiveModule {
     static const int NtpDifSecUpdate = 30;
     bool _ntp_enabled;
     time_t _last_rtc_time;
+    int _curr_dst;
+    int _curr_sun;
 
 
  	/** Interfaz para manejar los eventos en la m�quina de estados por defecto
@@ -226,6 +254,9 @@ class AstCalendar : public ActiveModule {
 
     // actualiza la hora tras un cambio de configuración
     void _updateRtcFromCfg();
+
+  unsigned char IsNaN(double hh, double mm, signed short int gmt);
+  double own_abs(double x);
 
 };
      
