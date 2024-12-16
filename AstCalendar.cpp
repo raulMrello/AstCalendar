@@ -32,9 +32,11 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", os
 
     if(defdbg){
     	esp_log_level_set(_MODULE_, ESP_LOG_DEBUG);
-    }
+		DEBUG_TRACE_D(_EXPR_, _MODULE_, "[%s:%d]AstCalendar log:%d", __func__, __LINE__,ESP_LOG_DEBUG);
+	}
     else{
     	esp_log_level_set(_MODULE_, ESP_LOG_WARN);
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "[%s:%d]AstCalendar log:%d", __func__, __LINE__, ESP_LOG_WARN);
     }
 
     // inicializaci�n NTP
