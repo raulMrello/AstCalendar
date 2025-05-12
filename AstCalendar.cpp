@@ -290,7 +290,7 @@ void AstCalendar::eventSimulatorCb() {
 	_curr_sun == 1 ?_astdata.clock.stat.dayTime = true : _astdata.clock.stat.dayTime = false;
 
 	// si hay flags que notificar...
-	if((flags & _astdata.cfg.evtFlags)!=0){
+	if((flags & _astdata.cfg.evtFlags)!=0 && _pub_topic_base != NULL){
 		// crea el objeto a notificar
 		Blob::NotificationData_t<calendar_manager> *notif = new Blob::NotificationData_t<calendar_manager>(_astdata);
 		MBED_ASSERT(notif);
@@ -334,6 +334,11 @@ void AstCalendar::eventSimulatorCb() {
 			}
 			Heap::memFree(pub_topic);
 			delete(notif);
+		}
+	}
+	else{
+		if(_pub_topic_base == NULL){
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "No hay eventos a notificar, pub_topic_base NULL");
 		}
 	}
 }
