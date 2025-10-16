@@ -29,11 +29,7 @@
  */
 #define ASTCAL_ENABLE_JSON_SUPPORT		0
 
-#ifdef CONFIG_ASTCALENDAR_INACTIVE
-const State::Event_type astcal_eventType = State::Event_type::EV_INACTIVE_MODULE_UI64;
-#else
 const State::Event_type astcal_eventType = State::Event_type::EV_RESERVED_USER_UI64;
-#endif
    
 class AstCalendar : public
 #ifdef CONFIG_ASTCALENDAR_INACTIVE
@@ -133,14 +129,14 @@ class AstCalendar : public
     static const uint32_t MaxQueueMessages = 16;
 
     /** Flags de operaciones a realizar por la tarea */
-    enum MsgEventFlags{
-    	RecvCfgSet 	 = (State::EV_RESERVED_USER << 0),  /// Flag activado al recibir mensaje en "set/cfg"
-    	RecvCfgGet	 = (State::EV_RESERVED_USER << 1),  /// Flag activado al recibir mensaje en "get/cfg"
-    	RecvBootGet	  = (State::EV_RESERVED_USER << 2),  /// Flag activado al recibir mensaje en "get/boot"
-		  RecvRtcSet    = (State::EV_RESERVED_USER << 3),
-		  RcvSetDefault   = (State::EV_RESERVED_USER << 4),
-      RcvOrtoGet = (State::EV_RESERVED_USER << 5),
-      RcvOcasoGet = (State::EV_RESERVED_USER << 6)
+    enum MsgEventFlags : uint64_t{
+    	RecvCfgSet 	 = ((uint64_t)astcal_eventType << 0),  /// Flag activado al recibir mensaje en "set/cfg"
+    	RecvCfgGet	 = ((uint64_t)astcal_eventType << 1),  /// Flag activado al recibir mensaje en "get/cfg"
+    	RecvBootGet	  = ((uint64_t)astcal_eventType << 2),  /// Flag activado al recibir mensaje en "get/boot"
+		  RecvRtcSet    = ((uint64_t)astcal_eventType << 3),
+		  RcvSetDefault   = ((uint64_t)astcal_eventType << 4),
+      RcvOrtoGet = ((uint64_t)astcal_eventType << 5),
+      RcvOcasoGet = ((uint64_t)astcal_eventType << 6)
     };
 
     /** Datos de configuraci�n y estado */

@@ -19,8 +19,8 @@ static const char* _MODULE_ = "[AstCal]........";
 //------------------------------------------------------------------------------------
 State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 	State::Msg* st_msg = (State::Msg*)se->oe->value.p;
-    switch((int)se->evt){
-        case State::EV_ENTRY:{
+    switch((uint64_t)se->evt){
+        case (uint64_t)State::EV_ENTRY:{
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Iniciando recuperaci�n de datos...");
         	// recupera los datos de memoria NV
         	restoreConfig();
@@ -50,12 +50,12 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
             return State::HANDLED;
         }
 
-        case State::EV_TIMED:{
+        case (uint64_t)State::EV_TIMED:{
             return State::HANDLED;
         }
 
         // Procesa datos recibidos de la publicaci�n en cmd/$BASE/cfg/set
-        case RecvCfgSet:{
+        case (uint64_t)RecvCfgSet:{
         	Blob::SetRequest_t<calendar_manager>* req = (Blob::SetRequest_t<calendar_manager>*)st_msg->msg;
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nueva configuraci�n");
 			// si no hay errores, actualiza la configuraci�n
@@ -119,13 +119,13 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 
             return State::HANDLED;
         }
-        case RcvSetDefault:{
+        case (uint64_t)RcvSetDefault:{
         	DEBUG_TRACE_E(_EXPR_,_MODULE_,"Factory Reset!!!");
         	setDefaultConfig();
         	return State::HANDLED;
         }
         // Procesa datos recibidos de la publicaci�n en cmd/$BASE/cfg/get
-        case RecvCfgGet:{
+        case (uint64_t)RecvCfgGet:{
         	Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
         	// prepara el topic al que responder
         	char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
@@ -150,7 +150,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
         }
 
         // Procesa datos recibidos de la publicaci�n en get/boot
-        case RecvBootGet:{
+        case (uint64_t)RecvBootGet:{
 			Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
 			char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 			MBED_ASSERT(pub_topic);
@@ -172,7 +172,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			return State::HANDLED;
         }
 
-		case RecvRtcSet:{
+		case (uint64_t)RecvRtcSet:{
 			Blob::SetRequest_t<time_t>* req = (Blob::SetRequest_t<time_t>*)st_msg->msg;
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Recibida nuevo datetime");
 			// si no hay errores, actualiza la configuraci�n
@@ -205,7 +205,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			return State::HANDLED;
         }
 
-        case RcvOrtoGet:{
+        case (uint64_t)RcvOrtoGet:{
 			Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
         	// prepara el topic al que responder
         	char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
@@ -229,7 +229,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			return State::HANDLED;
 		}
 
-		case RcvOcasoGet:{
+		case (uint64_t)RcvOcasoGet:{
 			Blob::GetRequest_t* req = (Blob::GetRequest_t*)st_msg->msg;
         	// prepara el topic al que responder
         	char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
@@ -252,13 +252,13 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			Heap::memFree(pub_topic);
 			return State::HANDLED;
 		}
-		case State::EV_EXIT:{
+		case (uint64_t)State::EV_EXIT:{
             nextState();
             return State::HANDLED;
         }
 
         default:{
-        	return State::IGNORED;
+            return State::IGNORED;
         }
 
      }
