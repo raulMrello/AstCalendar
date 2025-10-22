@@ -1,0 +1,54 @@
+menu "AstCalendar Configuration"
+
+    config ASTCALENDAR_ENABLED
+        bool "AstCalendar Enabled"
+        default y
+
+    config ASTCALENDAR_TOPIC
+        depends on ASTCALENDAR_ENABLED
+        string "ASTCALENDAR TOPIC"
+        default "astcal"
+        help
+            Topic for AstCalendar
+
+    choice ASTCALENDAR_LOG_LEVEL
+        depends on ASTCALENDAR_ENABLED
+        prompt "Log level for AstCalendar"
+        default ASTCALENDAR_LOG_LEVEL_INFO
+
+        config ASTCALENDAR_LOG_LEVEL_NONE
+            bool "NONE"
+        
+        config ASTCALENDAR_LOG_LEVEL_ERROR
+            bool "ERROR"
+
+        config ASTCALENDAR_LOG_LEVEL_WARN
+            bool "WARN"
+
+        config ASTCALENDAR_LOG_LEVEL_INFO
+            bool "INFO"
+
+        config ASTCALENDAR_LOG_LEVEL_DEBUG
+            bool "DEBUG"
+
+        config ASTCALENDAR_LOG_LEVEL_VERBOSE
+            bool "VERBOSE"
+
+    endchoice   
+
+    config ASTCALENDAR_NVS_ID
+        depends on ASTCALENDAR_ENABLED
+        int "NVS ID for AstCalendar"
+        default 1
+        help
+            NVS ID for AstCalendar
+
+    config ASTCALENDAR_NVS_KEYS
+        depends on ASTCALENDAR_ENABLED
+        hex
+        prompt "NVS Keys for AstCalendar"
+        default 0xffffffff
+        help
+            NVS Keys for AstCalendar. (0xffffffff) Resetea todas las keys
+
+endmenu
