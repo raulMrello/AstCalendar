@@ -78,7 +78,7 @@ void AstCalendar::restoreConfig(){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo CalManVerb!");
 		if(!resultRestoreManBlob){
 			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo CalManVerb! Establece configuracion por defecto");
-			_astdata.cfg.verbosity = APP_ASTCALENDAR_LOG_LEVEL;
+			_astdata.cfg.verbosity = ASTCALENDAR_LOG_LEVEL;
 		}
 		else
 			_astdata.cfg.verbosity = manCfgOld.verbosity;
@@ -89,7 +89,7 @@ void AstCalendar::restoreConfig(){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo CalManNvs!");
 		if(!resultRestoreManBlob){
 			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo CalManNvs! Establece configuracion por defecto");
-			_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID;
+			_astdata.cfg.nvs_id = CONFIG_ASTCALENDAR_NVS_ID;
 		}
 		else
 			_astdata.cfg.nvs_id = manCfgOld.nvs_id;
@@ -292,7 +292,7 @@ void AstCalendar::_updateRtcFromCfg(){
 
 //------------------------------------------------------------------------------------
 bool AstCalendar::checkIntegrity(){
-	if(_astdata.cfg.nvs_id != APP_ASTCALENDAR_NVS_ID){
+	if(_astdata.cfg.nvs_id != CONFIG_ASTCALENDAR_NVS_ID){
 		return false;
 	}
 	// verifico zona horaria
@@ -335,7 +335,7 @@ void AstCalendar::setDefaultConfig(){
 	// establezco configuraci�n por defecto del manager
 	_astdata.cfg.updFlags = CalendarManagerCfgUpdNotif;
 	_astdata.cfg.evtFlags = CalendarClockSecEvt;
-	_astdata.cfg.verbosity = APP_ASTCALENDAR_LOG_LEVEL;
+	_astdata.cfg.verbosity = ASTCALENDAR_LOG_LEVEL;
 
 	// establezco configuraci�n por defecto del reloj integrado (para Madrid)
 	strncpy(_astdata.clock.cfg.geoloc.timezone, "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", CalendarGeolocTimezoneLength);
@@ -351,7 +351,7 @@ void AstCalendar::setDefaultConfig(){
 	}
 	_astdata.clock.cfg._numPeriods = CalendarClockCfgMaxNumPeriods;
 	_astdata.clock.cfg.geoloc._numPeriods = CalendarClockCfgMaxNumPeriods;
-	_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID;
+	_astdata.cfg.nvs_id = CONFIG_ASTCALENDAR_NVS_ID;
 
 	saveConfig();
 }

@@ -21,13 +21,28 @@
 #include "RealTimeClock.h"
 #include "JsonParserBlob.h"
 #include "calendar_objects.h"
-#include "sdkconfig.h"
+#include "cpp_utils.h"
 
 
 /** Flag para habilitar el soporte de objetos JSON en las suscripciones a MQLib
  *  Por defecto DESACTIVADO
  */
 #define ASTCAL_ENABLE_JSON_SUPPORT		0
+
+#ifdef CONFIG_ASTCALENDAR_LOG_LEVEL_ERROR
+#define ASTCALENDAR_LOG_LEVEL		ESP_LOG_ERROR
+#elif CONFIG_ASTCALENDAR_LOG_LEVEL_WARN
+#define ASTCALENDAR_LOG_LEVEL		ESP_LOG_WARN
+#elif CONFIG_ASTCALENDAR_LOG_LEVEL_INFO
+#define ASTCALENDAR_LOG_LEVEL		ESP_LOG_INFO
+#elif CONFIG_ASTCALENDAR_LOG_LEVEL_DEBUG
+#define ASTCALENDAR_LOG_LEVEL		ESP_LOG_DEBUG
+#elif CONFIG_ASTCALENDAR_LOG_LEVEL_VERBOSE
+#define ASTCALENDAR_LOG_LEVEL		ESP_LOG_VERBOSE
+#else
+#define ASTCALENDAR_LOG_LEVEL		ESP_LOG_NONE
+#endif
+
 
 const State::Event_type astcal_eventType = State::Event_type::EV_RESERVED_USER_UI64;
    
