@@ -68,7 +68,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			}
         	// si hay errores en el mensaje o en la actualizaci�n, devuelve resultado sin hacer nada
         	if(req->_error.code != Blob::ErrOK){
-        		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_UPD al actualizar code=%d", req->_error.code);
+				DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_UPD al actualizar code=%"PRId32"", (int32_t)req->_error.code);
         		char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
 				MBED_ASSERT(pub_topic);
 				sprintf(pub_topic, "stat/cfg/%s", _pub_topic_base);

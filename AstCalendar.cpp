@@ -7,6 +7,7 @@
 
 #include "AstCalendar.h"
 #include "lwip/apps/sntp.h"
+#include <inttypes.h>
 
 //------------------------------------------------------------------------------------
 //-- PRIVATE TYPEDEFS ----------------------------------------------------------------
@@ -36,14 +37,14 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg)
 	_json_supported = true;
 	#endif
 
-    if(defdbg){
-    	esp_log_level_set(_MODULE_, ESP_LOG_DEBUG);
-		DEBUG_TRACE_D(_EXPR_, _MODULE_, "[%s:%d]AstCalendar log:%d", __func__, __LINE__,ESP_LOG_DEBUG);
+	if(defdbg){
+		esp_log_level_set(_MODULE_, ESP_LOG_DEBUG);
+		DEBUG_TRACE_D(_EXPR_, _MODULE_, "[%s:%d]AstCalendar log:%"PRId32"", __func__, __LINE__, (int32_t)ESP_LOG_DEBUG);
 	}
-    else{
-    	esp_log_level_set(_MODULE_, ESP_LOG_WARN);
-		DEBUG_TRACE_W(_EXPR_, _MODULE_, "[%s:%d]AstCalendar log:%d", __func__, __LINE__, ESP_LOG_WARN);
-    }
+	else{
+		esp_log_level_set(_MODULE_, ESP_LOG_WARN);
+		DEBUG_TRACE_W(_EXPR_, _MODULE_, "[%s:%d]AstCalendar log:%"PRId32"", __func__, __LINE__, (int32_t)ESP_LOG_WARN);
+	}
 
     // inicializaci�n NTP
     _ntp_enabled = false;
@@ -94,8 +95,8 @@ int AstCalendar::gmtDesviation(struct tm* utc_time , struct tm* local_time ){
 	
 	utcMins = utc_time->tm_hour*60 + utc_time->tm_min;
 	localMins = local_time->tm_hour*60 + local_time->tm_min;
-	DEBUG_TRACE_D(_EXPR_, _MODULE_, "UTC[dia: %d]: %d:%d -> %d", utc_time->tm_mday, utc_time->tm_hour, utc_time->tm_min, utcMins);
-	DEBUG_TRACE_D(_EXPR_, _MODULE_, "LCL[dia: %d]: %d:%d -> %d", local_time->tm_mday, local_time->tm_hour, local_time->tm_min, localMins);
+	DEBUG_TRACE_D(_EXPR_, _MODULE_, "UTC[dia: %"PRId32"]: %"PRId32":%"PRId32" -> %"PRId32"", (int32_t)utc_time->tm_mday, (int32_t)utc_time->tm_hour, (int32_t)utc_time->tm_min, (int32_t)utcMins);
+	DEBUG_TRACE_D(_EXPR_, _MODULE_, "LCL[dia: %"PRId32"]: %"PRId32":%"PRId32" -> %"PRId32"", (int32_t)local_time->tm_mday, (int32_t)local_time->tm_hour, (int32_t)local_time->tm_min, (int32_t)localMins);
 	
 	if(local_time->tm_mday != utc_time->tm_mday){
 		sameDay = false;
@@ -110,7 +111,7 @@ int AstCalendar::gmtDesviation(struct tm* utc_time , struct tm* local_time ){
 		diff_hours = (localMins - utcMins);
 	}
 
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Diferencia GMT: %d", diff_hours);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Diferencia GMT: %"PRId32"", (int32_t)diff_hours);
 
 	return diff_hours;
 }
@@ -160,7 +161,7 @@ void AstCalendar::duskDawnCalc(){
 	newDateSunset.tm_min = sunset % 60;
 	_astdata.clock.stat.dawn = mktime(&newDateSunrise);
 	_astdata.clock.stat.dusk = mktime(&newDateSunset);
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Sunrise: %d(%d:%d), Sunset: %d(%d:%d)", sunrise, sunrise/60, sunrise%60, sunset, sunset/60, sunset%60);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Sunrise: %"PRIu16"(%"PRIu16":%"PRIu16"), Sunset: %"PRIu16"(%"PRIu16":%"PRIu16")", sunrise, (uint16_t)(sunrise/60), (uint16_t)(sunrise%60), sunset, (uint16_t)(sunset/60), (uint16_t)(sunset%60));
 	_curr_sun = -1; //para publicar el estado actual
 
 	//Orto y ocaso
@@ -168,8 +169,8 @@ void AstCalendar::duskDawnCalc(){
 	uint32_t duskCorr = (uint32_t)_astdata.clock.cfg.geoloc.astCorr[0][1]*60;
 	_astdata.clock.stat.dawnWithCorr = _astdata.clock.stat.dawn + dawnCorr;
 	_astdata.clock.stat.duskWithCorr = _astdata.clock.stat.dusk + duskCorr;
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn correcciones: %d", (uint32_t)_astdata.clock.stat.dawnWithCorr);
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk correcciones ayer: %d", (uint32_t)_astdata.clock.stat.duskWithCorr);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn correcciones: %"PRIu32"", (uint32_t)_astdata.clock.stat.dawnWithCorr);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk correcciones ayer: %"PRIu32"", (uint32_t)_astdata.clock.stat.duskWithCorr);
 	// Evaluamos si el orto y el ocaso con correcciones se dan en diferentes dias con respecto a dawnCorr y duskCorr
 	// Convertimos a hora local dawnCorr y duskCorr para ver en que día se dan
 	tm dawnCorrTm;tm duskCorrTm;
@@ -182,30 +183,30 @@ void AstCalendar::duskDawnCalc(){
 
 	if(dawnCorrTm.tm_mday != dawnTriggerTm.tm_mday){
 		if(dawnCorrTm.tm_mday > dawnTriggerTm.tm_mday){
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn tras correcciones ayer: %d", (uint32_t)_astdata.clock.stat.dawnWithCorr);
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn tras correcciones ayer: %"PRIu32"", (uint32_t)_astdata.clock.stat.dawnWithCorr);
 			// dawnCorr es del día anterior
 			// nos vamos al dia siguiente porque seguro que su orto se mete en el dia actual
 			_astdata.clock.stat.dawnWithCorr += 86400;
 		}
 		else{
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn tras correcciones mañana: %d", (uint32_t)_astdata.clock.stat.dawnWithCorr);
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dawn tras correcciones mañana: %"PRIu32"", (uint32_t)_astdata.clock.stat.dawnWithCorr);
 			// dawnCorr es del día siguiente
 			_astdata.clock.stat.dawnWithCorr -= 86400;
 		}
 	}
 	if (duskCorrTm.tm_mday != duskTriggerTm.tm_mday){
 		if(duskCorrTm.tm_mday > duskTriggerTm.tm_mday){
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk tras correcciones ayer: %d", (uint32_t)_astdata.clock.stat.duskWithCorr);
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk tras correcciones ayer: %"PRIu32"", (uint32_t)_astdata.clock.stat.duskWithCorr);
 			// duskCorr es del día anterior
 			_astdata.clock.stat.duskWithCorr += 86400;
 		}
 		else{
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk tras correcciones mañana: %d", (uint32_t)_astdata.clock.stat.duskWithCorr);
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Dusk tras correcciones mañana: %"PRIu32"", (uint32_t)_astdata.clock.stat.duskWithCorr);
 			// duskCorr es del día siguiente
 			_astdata.clock.stat.duskWithCorr -= 86400;
 		}
 	}
-	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Tras correcciones -> Sunrise: %d, Sunset: %d", (uint32_t)_astdata.clock.stat.dawnWithCorr, (uint32_t)_astdata.clock.stat.duskWithCorr);
+	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Tras correcciones -> Sunrise: %"PRIu32", Sunset: %"PRIu32"", (uint32_t)_astdata.clock.stat.dawnWithCorr, (uint32_t)_astdata.clock.stat.duskWithCorr);
 
 }
 
@@ -264,7 +265,7 @@ void AstCalendar::eventSimulatorCb() {
 	//Orto y ocaso
 	uint32_t _curr_sun_new = 0;
 	uint32_t flagsDawnDusk = 0;
-	DEBUG_TRACE_D(_EXPR_,_MODULE_,"Hora actual: %d, Orto: %d, Ocaso: %d", (uint32_t)t, (uint32_t)_astdata.clock.stat.dawnWithCorr, (uint32_t)_astdata.clock.stat.duskWithCorr);
+	DEBUG_TRACE_D(_EXPR_,_MODULE_,"Hora actual: %"PRIu32", Orto: %"PRIu32", Ocaso: %"PRIu32"", (uint32_t)t, (uint32_t)_astdata.clock.stat.dawnWithCorr, (uint32_t)_astdata.clock.stat.duskWithCorr);
 	if(_astdata.clock.stat.dawnWithCorr < _astdata.clock.stat.duskWithCorr){
 		if(t >= _astdata.clock.stat.dawnWithCorr && t < _astdata.clock.stat.duskWithCorr){
 			flagsDawnDusk |= CalendarClockDawnEvt;
@@ -359,7 +360,7 @@ void AstCalendar::enableNTPClient() {
 	sntp_init();
 	for(int i=0;i<3;i++){
 		if(!sntp_enabled()){
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Reiniciando servicio NTP %d de 3", i);
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Reiniciando servicio NTP %"PRId32" de 3", (int32_t)i);
 			sntp_stop();
 			sntp_init();
 		}
@@ -386,7 +387,7 @@ void AstCalendar::_ntpUpdateCb(){
 
 	// Actualiza hora en driver RTC
 	tm* utc_tm = gmtime(&tnow);
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, asctime(gmtime(&tnow)));
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%"PRIu32") %s", (uint32_t)tnow, asctime(gmtime(&tnow)));
 	_rtc->setTime(*utc_tm);
 }
 
@@ -408,7 +409,7 @@ void AstCalendar::setRtcTime(time_t tnow){
 
 	// Actualiza hora en driver RTC
 	tm* utc_tm = gmtime(&tnow);
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%d) %s", (int)tnow, asctime(gmtime(&tnow)));
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC update(time_t_utc=%"PRIu32") %s", (uint32_t)tnow, asctime(gmtime(&tnow)));
 	_rtc->setTime(*utc_tm);
 }
 

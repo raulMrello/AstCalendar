@@ -6,6 +6,7 @@
  */
 
 #include "AstCalendar.h"
+#include <inttypes.h>
 
 //------------------------------------------------------------------------------------
 //-- PRIVATE TYPEDEFS ----------------------------------------------------------------
@@ -226,14 +227,14 @@ void AstCalendar::_updateRtcFromCfg(){
 	if(_rtc){
 		_rtc->getTime(&_now, &_pw_fail);
 		if (_now.tm_year < (2018 - 1900)) {
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "ERR_RTC_READ datos incorrectos: %d:%d:%d, %d-%d-%d diasem=%d",
-					_now.tm_hour,
-					_now.tm_min,
-					_now.tm_sec,
-					_now.tm_mday,
-					_now.tm_mon+1,
-					_now.tm_year,
-					_now.tm_wday);
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "ERR_RTC_READ datos incorrectos: %"PRId32":%"PRId32":%"PRId32", %"PRId32"-%"PRId32"-%"PRId32" diasem=%"PRId32"",
+				(int32_t)_now.tm_hour,
+				(int32_t)_now.tm_min,
+				(int32_t)_now.tm_sec,
+				(int32_t)_now.tm_mday,
+				(int32_t)(_now.tm_mon+1),
+				(int32_t)_now.tm_year,
+				(int32_t)_now.tm_wday);
 
 			// establece la hora por defecto lunes, 1 Ene 2018 a las 00:00
 			// set January 1st,2018 0am as a default
@@ -263,7 +264,7 @@ void AstCalendar::_updateRtcFromCfg(){
 		_now.tm_isdst = 0;
 	}
 
-	DEBUG_TRACE_I(_EXPR_,_MODULE_,"Segundos transcurridos desde el ultimo reset: %u",(uint32_t)_pw_fail);
+	DEBUG_TRACE_I(_EXPR_,_MODULE_,"Segundos transcurridos desde el ultimo reset: %"PRIu32"",(uint32_t)_pw_fail);
 
 	setenv("TZ", _astdata.clock.cfg.geoloc.timezone, 1);
 	tzset() ;
@@ -273,7 +274,7 @@ void AstCalendar::_updateRtcFromCfg(){
 //	local_field->tm_isdst = -1;
 //	time_t utc = mktime(local_field);
 	std::time_t utc = cpp_utils::timegm(&_now);
-	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %d", (int)utc);
+	DEBUG_TRACE_W(_EXPR_, _MODULE_, "RTC read tm_utc: %"PRIu32"", (uint32_t)utc);
 
 
 	time_t tnow;
@@ -304,14 +305,14 @@ bool AstCalendar::checkIntegrity(){
 	// verifico periodos activos sin rangos establecidos
 	for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
 		if((_astdata.clock.cfg.periods[i].since == 0 || _astdata.clock.cfg.periods[i].until == 0) && _astdata.clock.cfg.periods[i].enabled){
-			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY period=%d, since=%ld, until=%ld,enabled=%d", i,_astdata.clock.cfg.periods[i].since, _astdata.clock.cfg.periods[i].until, _astdata.clock.cfg.periods[i].enabled);
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY period=%"PRId32", since=%"PRIu32", until=%"PRIu32",enabled=%"PRIu32"", (int32_t)i,(uint32_t)_astdata.clock.cfg.periods[i].since, (uint32_t)_astdata.clock.cfg.periods[i].until, (uint32_t)_astdata.clock.cfg.periods[i].enabled);
 			return false;
 		}
 	}
 
 	// Verifico n�mero de periodos discordante
 	if((_astdata.clock.cfg._numPeriods != _astdata.clock.cfg.geoloc._numPeriods) || (_astdata.clock.cfg._numPeriods != CalendarClockCfgMaxNumPeriods) || (_astdata.clock.cfg.geoloc._numPeriods != CalendarClockCfgMaxNumPeriods)){
-		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY clock_cfg_periods=%d, geoloc_periods=%d", _astdata.clock.cfg._numPeriods, _astdata.clock.cfg.geoloc._numPeriods);
+		DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_INTEGRITY clock_cfg_periods=%"PRIu8", geoloc_periods=%"PRIu8"", (uint8_t)_astdata.clock.cfg._numPeriods, (uint8_t)_astdata.clock.cfg.geoloc._numPeriods);
 		return false;
 	}
 
@@ -421,7 +422,7 @@ void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t&
 			_astdata.cfg.evtFlags = data.cfg.evtFlags;
 		}
 		if((data.cfg._keys & (1 << 2))){
-			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando verbosity=(de %d a %d)", _astdata.cfg.verbosity, data.cfg.verbosity);
+			DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando verbosity=(de %"PRIu8" a %"PRIu8")", (uint8_t)_astdata.cfg.verbosity, (uint8_t)data.cfg.verbosity);
 			_astdata.cfg.verbosity = data.cfg.verbosity;
 			esp_log_level_set(_MODULE_, _astdata.cfg.verbosity);
 		}
@@ -458,7 +459,7 @@ void AstCalendar::_updateConfig(const calendar_manager& data, Blob::ErrorData_t&
 			}
 			// timezoneCode
 			if((data.clock.cfg.geoloc._keys & (1 << 4))){
-				DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando clock.cfg.geoloc.timezoneCode = %d", data.clock.cfg.geoloc.timezoneCode);
+				DEBUG_TRACE_I(_EXPR_, _MODULE_, "Actualizando clock.cfg.geoloc.timezoneCode = %"PRIu8"", (uint8_t)data.clock.cfg.geoloc.timezoneCode);
 				_astdata.clock.cfg.geoloc.timezoneCode = data.clock.cfg.geoloc.timezoneCode;
 			}
 		}

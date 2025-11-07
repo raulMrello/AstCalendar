@@ -9,6 +9,7 @@
 
 #include "JsonParserBlob.h"
 #include "calendar_objects.h"
+#include <inttypes.h>
 
 //------------------------------------------------------------------------------------
 //-- PRIVATE TYPEDEFS ----------------------------------------------------------------
@@ -174,7 +175,7 @@ cJSON* getJsonFromCalendarClockCfg(const calendar_clock_cfg& obj){
 		if((item = getJsonFromCalendarPeriod(obj.periods[i])) == NULL){
 			cJSON_Delete(array);
 			cJSON_Delete(json);
-			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock_cfg.periods[%d] = null", i);
+			DEBUG_TRACE_E(_EXPR_, _MODULE_, "ERR_JSON clock_cfg.periods[%"PRId32"] = null", (int32_t)i);
 			return NULL;
 		}
 		cJSON_AddItemToArray(array, item);
