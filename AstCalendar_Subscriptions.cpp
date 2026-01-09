@@ -39,7 +39,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
         }
 
         // crea el mensaje para publicar en la m�quina de estados
-        State::Msg* op = (State::Msg*)Heap::memAlloc(sizeof(State::Msg));
+        State::Msg* op = (State::Msg*) new State::Msg();
         MBED_ASSERT(op);
 
         // el mensaje es un blob tipo Blob::LightCfgData_t
@@ -83,7 +83,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 		}
 
 		// crea el mensaje para publicar en la m�quina de estados
-		State::Msg* op = (State::Msg*)Heap::memAlloc(sizeof(State::Msg));
+		State::Msg* op = (State::Msg*) new State::Msg();
 		MBED_ASSERT(op);
 
 		// el mensaje es un blob tipo Blob::LightCfgData_t
@@ -128,7 +128,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
         }
 
         // crea el mensaje para publicar en la m�quina de estados
-        State::Msg* op = (State::Msg*)Heap::memAlloc(sizeof(State::Msg));
+        State::Msg* op = (State::Msg*) new State::Msg();
         MBED_ASSERT(op);
 
         // el mensaje es un blob tipo Blob::GetRequest_t
@@ -173,7 +173,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
         }
 
         // crea el mensaje para publicar en la m�quina de estados
-        State::Msg* op = (State::Msg*)Heap::memAlloc(sizeof(State::Msg));
+        State::Msg* op = (State::Msg*) new State::Msg();
         MBED_ASSERT(op);
 
         // el mensaje es un blob tipo Blob::GetRequest_t
@@ -218,7 +218,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
         }
 
         // crea el mensaje para publicar en la m�quina de estados
-        State::Msg* op = (State::Msg*)Heap::memAlloc(sizeof(State::Msg));
+        State::Msg* op = (State::Msg*) new State::Msg();
         MBED_ASSERT(op);
 
         if(!json_decoded){
@@ -259,7 +259,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
         }
 
         // crea el mensaje para publicar en la m�quina de estados
-        State::Msg* op = (State::Msg*)Heap::memAlloc(sizeof(State::Msg));
+        State::Msg* op = (State::Msg*) new State::Msg();
         MBED_ASSERT(op);
 
         // el mensaje es un blob tipo Blob::GetRequest_t
@@ -302,7 +302,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
         }
 
         // crea el mensaje para publicar en la m�quina de estados
-        State::Msg* op = (State::Msg*)Heap::memAlloc(sizeof(State::Msg));
+        State::Msg* op = (State::Msg*) new State::Msg();
         MBED_ASSERT(op);
 
         // el mensaje es un blob tipo Blob::GetRequest_t

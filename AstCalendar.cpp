@@ -22,7 +22,13 @@ static const char* _MODULE_ = "[AstCal]........";
 
 
 //------------------------------------------------------------------------------------
-AstCalendar::AstCalendar(FSManager* fs, bool defdbg) : ActiveModule("AstCal", osPriorityNormal, 3072, fs, defdbg) {
+AstCalendar::AstCalendar(FSManager* fs, bool defdbg)
+#ifdef CONFIG_ASTCALENDAR_INACTIVE
+ : InactiveModule("AstCal", fs, defdbg)
+#else
+ : ActiveModule("AstCal", osPriorityNormal, 3072, fs, defdbg)
+#endif
+{
 
 	// Establece el soporte de JSON
 	_json_supported = false;

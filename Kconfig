@@ -1,0 +1,11 @@
+menu "AstCalendar"
+
+config ASTCALENDAR_INACTIVE
+    bool "Make AstCalendar inherit from InactiveModule (no dedicated thread)"
+    default n
+    help
+        If enabled, AstCalendar will be built as an InactiveModule (sharing the
+        main ActiveModule thread context chain) instead of spawning its own
+        ActiveModule thread. Use this to reduce thread count / RAM.
+
+endmenu

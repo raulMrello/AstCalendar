@@ -12,11 +12,16 @@
 #define __AstCalendar__H
 
 #include "mbed.h"
+#ifdef CONFIG_ASTCALENDAR_INACTIVE
+#include "InactiveModule.h"
+#else
 #include "ActiveModule.h"
+#endif
 #include "AstCalendarBlob.h"
 #include "RealTimeClock.h"
 #include "JsonParserBlob.h"
 #include "calendar_objects.h"
+#include "sdkconfig.h"
 
 
 /** Flag para habilitar el soporte de objetos JSON en las suscripciones a MQLib
@@ -24,16 +29,22 @@
  */
 #define ASTCAL_ENABLE_JSON_SUPPORT		0
 
-
+const State::Event_type astcal_eventType = State::Event_type::EV_RESERVED_USER_UI64;
    
-class AstCalendar : public ActiveModule {
+class AstCalendar : public
+#ifdef CONFIG_ASTCALENDAR_INACTIVE
+  InactiveModule
+#else
+  ActiveModule
+#endif
+{
   public:
               
     /** Constructor por defecto
      * 	@param fs Objeto FSManager para operaciones de backup
      * 	@param defdbg Flag para habilitar depuraci�n por defecto
      */
-    AstCalendar(FSManager* fs, bool defdbg = false);
+  AstCalendar(FSManager* fs, bool defdbg = false);
 
 
     /** Destructor
@@ -118,14 +129,14 @@ class AstCalendar : public ActiveModule {
     static const uint32_t MaxQueueMessages = 16;
 
     /** Flags de operaciones a realizar por la tarea */
-    enum MsgEventFlags{
-    	RecvCfgSet 	 = (State::EV_RESERVED_USER << 0),  /// Flag activado al recibir mensaje en "set/cfg"
-    	RecvCfgGet	 = (State::EV_RESERVED_USER << 1),  /// Flag activado al recibir mensaje en "get/cfg"
-    	RecvBootGet	  = (State::EV_RESERVED_USER << 2),  /// Flag activado al recibir mensaje en "get/boot"
-		  RecvRtcSet    = (State::EV_RESERVED_USER << 3),
-		  RcvSetDefault   = (State::EV_RESERVED_USER << 4),
-      RcvOrtoGet = (State::EV_RESERVED_USER << 5),
-      RcvOcasoGet = (State::EV_RESERVED_USER << 6)
+    enum MsgEventFlags : uint64_t{
+    	RecvCfgSet 	 = ((uint64_t)astcal_eventType << 0),  /// Flag activado al recibir mensaje en "set/cfg"
+    	RecvCfgGet	 = ((uint64_t)astcal_eventType << 1),  /// Flag activado al recibir mensaje en "get/cfg"
+    	RecvBootGet	  = ((uint64_t)astcal_eventType << 2),  /// Flag activado al recibir mensaje en "get/boot"
+		  RecvRtcSet    = ((uint64_t)astcal_eventType << 3),
+		  RcvSetDefault   = ((uint64_t)astcal_eventType << 4),
+      RcvOrtoGet = ((uint64_t)astcal_eventType << 5),
+      RcvOcasoGet = ((uint64_t)astcal_eventType << 6)
     };
 
     /** Datos de configuraci�n y estado */
@@ -214,9 +225,13 @@ class AstCalendar : public ActiveModule {
 	 * 	@param type Tipo de los datos
 	 * 	@return True: �xito, False: no se pudo recuperar
 	 */
-	virtual bool saveParameter(const char* param_id, void* data, size_t size, NVSInterface::KeyValueType type){
-		return ActiveModule::saveParameter(param_id, data, size, type);
-	}
+  virtual bool saveParameter(const char* param_id, void* data, size_t size, NVSInterface::KeyValueType type){
+#ifdef CONFIG_ASTCALENDAR_INACTIVE
+    return InactiveModule::saveParameter(param_id, data, size, type);
+#else
+    return ActiveModule::saveParameter(param_id, data, size, type);
+#endif
+  }
 
 
 	/** Recupera un par�metro de la memoria NV
@@ -226,9 +241,13 @@ class AstCalendar : public ActiveModule {
 	 * 	@param type Tipo de los datos
 	 * 	@return True: �xito, False: no se pudo recuperar
 	 */
-	virtual bool restoreParameter(const char* param_id, void* data, size_t size, NVSInterface::KeyValueType type){
-		return ActiveModule::restoreParameter(param_id, data, size, type);
-	}
+  virtual bool restoreParameter(const char* param_id, void* data, size_t size, NVSInterface::KeyValueType type){
+#ifdef CONFIG_ASTCALENDAR_INACTIVE
+    return InactiveModule::restoreParameter(param_id, data, size, type);
+#else
+    return ActiveModule::restoreParameter(param_id, data, size, type);
+#endif
+  }
 
 
 	/** Ejecuta el simulador de eventos
