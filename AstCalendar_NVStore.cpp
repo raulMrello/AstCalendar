@@ -200,6 +200,25 @@ void AstCalendar::restoreConfig(){
 		}
 	}
 
+	if(_astdata.cfg.nvs_id < APP_ASTCALENDAR_NVS_ID[APP_ASTCALENDAR_NVS_ID_SIZE-1]){
+		int it = -1;
+		for(uint8_t i = 0; i < APP_ASTCALENDAR_NVS_ID_SIZE; i++){
+			if(_astdata.cfg.nvs_id == APP_ASTCALENDAR_NVS_ID[i]){
+				it = i+1;
+				break;
+			}
+		}
+		if(it == -1){
+			it = 0;
+			DEBUG_TRACE_W(_EXPR_, _MODULE_, "No hemos encontrado nuestro AstCalendarNvsId[%d], cogemos :%d", _astdata.cfg.nvs_id, it);
+		}
+
+		for(uint8_t in = it; in < APP_ASTCALENDAR_NVS_ID_SIZE; in++){
+			setDefaultConfig(APP_ASTCALENDAR_NVS_KEYS[in]);
+		}
+		saveCfg = true;
+	}
+
 	if(!checkIntegrity()){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_CFG. Ha fallado el check de integridad.");
 		setDefaultConfig();
@@ -324,6 +343,41 @@ bool AstCalendar::checkIntegrity(){
 
 //------------------------------------------------------------------------------------
 void AstCalendar::setDefaultConfig(){
+	setDefaultConfig(0xffffffff);
+	saveConfig();
+}
+
+
+//------------------------------------------------------------------------------------
+void AstCalendar::setDefaultConfig(uint32_t keys){
+	if(keys != 0xffffffff){
+		if(keys & (1 << 0)){
+			_astdata.uid = UID_CALENDAR_MANAGER;
+			_astdata.clock.uid = UID_CALENDAR_CLOCK;
+		}
+		if(keys & (1 << 1)){
+			_astdata.cfg.updFlags = CalendarManagerCfgUpdNotif;
+			_astdata.cfg.evtFlags = CalendarClockSecEvt;
+			_astdata.cfg.verbosity = APP_ASTCALENDAR_LOG_LEVEL;
+		}
+		if(keys & (1 << 2)){
+			strncpy(_astdata.clock.cfg.geoloc.timezone, "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", CalendarGeolocTimezoneLength);
+			_astdata.clock.cfg.geoloc.timezoneCode = 1;
+			_astdata.clock.cfg.geoloc.coords[0] = 40.416500;
+			_astdata.clock.cfg.geoloc.coords[1] = -3.702560;
+			for(int i=0;i<CalendarClockCfgMaxNumPeriods; i++){
+				_astdata.clock.cfg.periods[i].since = 0;
+				_astdata.clock.cfg.periods[i].until = 0;
+				_astdata.clock.cfg.periods[i].enabled = false;
+				_astdata.clock.cfg.geoloc.astCorr[i][0] = 0;
+				_astdata.clock.cfg.geoloc.astCorr[i][1] = 0;
+			}
+			_astdata.clock.cfg._numPeriods = CalendarClockCfgMaxNumPeriods;
+			_astdata.clock.cfg.geoloc._numPeriods = CalendarClockCfgMaxNumPeriods;
+		}
+		_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID[APP_ASTCALENDAR_NVS_ID_SIZE-1];
+		return;
+	}
 
 	// borro la configuraci�n y el estado
 	_astdata = {0};
@@ -352,8 +406,6 @@ void AstCalendar::setDefaultConfig(){
 	_astdata.clock.cfg._numPeriods = CalendarClockCfgMaxNumPeriods;
 	_astdata.clock.cfg.geoloc._numPeriods = CalendarClockCfgMaxNumPeriods;
 	_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID[APP_ASTCALENDAR_NVS_ID_SIZE-1];
-
-	saveConfig();
 }
 
 
