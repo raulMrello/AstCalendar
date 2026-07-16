@@ -89,7 +89,7 @@ void AstCalendar::restoreConfig(){
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo CalManNvs!");
 		if(!resultRestoreManBlob){
 			DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS leyendo CalManNvs! Establece configuracion por defecto");
-			_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID;
+			_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID[APP_ASTCALENDAR_NVS_ID_SIZE-1];
 		}
 		else
 			_astdata.cfg.nvs_id = manCfgOld.nvs_id;
@@ -292,7 +292,7 @@ void AstCalendar::_updateRtcFromCfg(){
 
 //------------------------------------------------------------------------------------
 bool AstCalendar::checkIntegrity(){
-	if(_astdata.cfg.nvs_id != APP_ASTCALENDAR_NVS_ID){
+	if(_astdata.cfg.nvs_id != APP_ASTCALENDAR_NVS_ID[APP_ASTCALENDAR_NVS_ID_SIZE-1]){
 		return false;
 	}
 	// verifico zona horaria
@@ -351,7 +351,7 @@ void AstCalendar::setDefaultConfig(){
 	}
 	_astdata.clock.cfg._numPeriods = CalendarClockCfgMaxNumPeriods;
 	_astdata.clock.cfg.geoloc._numPeriods = CalendarClockCfgMaxNumPeriods;
-	_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID;
+	_astdata.cfg.nvs_id = APP_ASTCALENDAR_NVS_ID[APP_ASTCALENDAR_NVS_ID_SIZE-1];
 
 	saveConfig();
 }
