@@ -4,6 +4,10 @@ menu "AstCalendar Configuration"
         bool "AstCalendar Enabled"
         default y
 
+    config ASTCALENDAR_CHARGER
+        bool "AstCalendar Charger Enabled"
+        default y
+
     config ASTCALENDAR_TOPIC
         depends on ASTCALENDAR_ENABLED
         string "ASTCALENDAR TOPIC"

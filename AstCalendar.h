@@ -21,6 +21,9 @@
 #include "RealTimeClock.h"
 #include "JsonParserBlob.h"
 #include "calendar_objects.h"
+#ifdef CONFIG_ASTCALENDAR_CHARGER
+#include "AstCalendar_UserConfig_Chargers.h"
+#endif
 #include "cpp_utils.h"
 
 
