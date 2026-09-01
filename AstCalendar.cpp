@@ -17,6 +17,12 @@
 static const char* _MODULE_ = "[AstCal]........";
 #define _EXPR_	(!IS_ISR())
 
+#ifdef CONFIG_ASTCALENDAR_STACK_IN_EXTERNAL_MEMORY
+static constexpr bool kAstCalendarUseExternalStack = true;
+#else
+static constexpr bool kAstCalendarUseExternalStack = false;
+#endif
+
 //------------------------------------------------------------------------------------
 //-- PUBLIC METHODS IMPLEMENTATION ---------------------------------------------------
 //------------------------------------------------------------------------------------
@@ -27,7 +33,7 @@ AstCalendar::AstCalendar(FSManager* fs, bool defdbg)
 #ifdef CONFIG_ASTCALENDAR_INACTIVE
  : InactiveModule("AstCal", fs, defdbg)
 #else
- : ActiveModule("AstCal", osPriorityNormal, 3072, fs, defdbg)
+ : ActiveModule("AstCal", osPriorityNormal, 3072, fs, defdbg, false, "ActiveMod", kAstCalendarUseExternalStack)
 #endif
 {
 

@@ -64,4 +64,13 @@ menu "AstCalendar Configuration"
             main ActiveModule thread context chain) instead of spawning its own
             ActiveModule thread. Use this to reduce thread count / RAM.
 
+    config ASTCALENDAR_STACK_IN_EXTERNAL_MEMORY
+        bool "Use external memory (PSRAM) for AstCalendar thread stack"
+        depends on !ASTCALENDAR_INACTIVE
+        depends on FREERTOS_TASK_CREATE_ALLOW_EXT_MEM
+        default n
+        help
+            If enabled, the AstCalendar ActiveModule thread stack is allocated in external memory (PSRAM).
+
+
 endmenu
