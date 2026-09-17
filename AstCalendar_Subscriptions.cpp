@@ -59,7 +59,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 			if(op->msg){
 				Heap::memFree(op->msg);
 			}
-			Heap::memFree(op);
+			delete op;
 		}
         return;
     }
@@ -103,7 +103,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 			if(op->msg){
 				Heap::memFree(op->msg);
 			}
-			Heap::memFree(op);
+			delete op;
 		}
 		return;
 	}
@@ -148,7 +148,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 			if(op->msg){
 				Heap::memFree(op->msg);
 			}
-			Heap::memFree(op);
+			delete op;
 		}
         return;
     }
@@ -193,7 +193,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 			if(op->msg){
 				Heap::memFree(op->msg);
 			}
-			Heap::memFree(op);
+			delete op;
 		}
         return;
     }
@@ -236,7 +236,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 			if(op->msg){
 				Heap::memFree(op->msg);
 			}
-			Heap::memFree(op);
+			delete op;
 		}
         return;
     }
@@ -279,7 +279,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 			if(op->msg){
 				Heap::memFree(op->msg);
 			}
-			Heap::memFree(op);
+			delete op;
 		}
         return;
 	}
@@ -322,7 +322,7 @@ void AstCalendar::subscriptionCb(const char* topic, void* msg, uint16_t msg_len)
 			if(op->msg){
 				Heap::memFree(op->msg);
 			}
-			Heap::memFree(op);
+			delete op;
 		}
         return;
 	}
