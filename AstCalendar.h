@@ -210,7 +210,7 @@ class AstCalendar : public
 
    	/** Graba la configuraci�n en memoria NV
 	 */
-	virtual void saveConfig();
+	virtual void saveConfig(bool enableResetCount = false);
 
   /**
    * @brief Elimina de NVS claves antiguas
@@ -226,11 +226,11 @@ class AstCalendar : public
 	 * 	@param type Tipo de los datos
 	 * 	@return True: �xito, False: no se pudo recuperar
 	 */
-  virtual bool saveParameter(const char* param_id, void* data, size_t size, NVSInterface::KeyValueType type){
+  virtual bool saveParameter(const char* param_id, void* data, size_t size, NVSInterface::KeyValueType type, bool enableResetCount = false){
 #ifdef CONFIG_ASTCALENDAR_INACTIVE
-    return InactiveModule::saveParameter(param_id, data, size, type);
+    return InactiveModule::saveParameter(param_id, data, size, type, enableResetCount);
 #else
-    return ActiveModule::saveParameter(param_id, data, size, type);
+    return ActiveModule::saveParameter(param_id, data, size, type, enableResetCount);
 #endif
   }
 

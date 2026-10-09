@@ -411,7 +411,7 @@ void AstCalendar::setDefaultConfig(uint32_t keys){
 
 
 //------------------------------------------------------------------------------------
-void AstCalendar::saveConfig(){
+void AstCalendar::saveConfig(bool enableResetCount){
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Guardando datos en memoria NV...");
 
 	if(!saveParameter("CalMUpdFlag", &_astdata.cfg.updFlags, sizeof(uint32_t),NVSInterface::TypeUint32)){
@@ -450,6 +450,11 @@ void AstCalendar::saveConfig(){
 
 	// aplica el nivel de verbosidad configurado
 	esp_log_level_set(_MODULE_, (esp_log_level_t)_astdata.cfg.verbosity);
+
+	if(enableResetCount){
+		uint8_t en = 1;
+		saveParameter("AppRstEn", &en, sizeof(en), NVSInterface::TypeUint8, true);
+	}
 }
 
 
