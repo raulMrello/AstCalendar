@@ -91,7 +91,7 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			//recalculamos horas de orto y ocaso
 			duskDawnCalc();
         	// almacena en el sistema de ficheros
-        	saveConfig();
+        	saveConfig(true);
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Config actualizada");
 
         	// si est� habilitada la notificaci�n de actualizaci�n, lo notifica
