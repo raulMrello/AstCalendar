@@ -210,7 +210,7 @@ class AstCalendar : public
 
    	/** Graba la configuraci�n en memoria NV
 	 */
-	virtual void saveConfig(bool enableResetCount = false);
+	virtual bool saveConfig(bool enableResetCount = false);
 
   /**
    * @brief Elimina de NVS claves antiguas

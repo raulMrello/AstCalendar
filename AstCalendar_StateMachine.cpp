@@ -67,6 +67,10 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 				}
 			}
         	// si hay errores en el mensaje o en la actualizaci�n, devuelve resultado sin hacer nada
+        	if(req->_error.code == Blob::ErrOK && !saveConfig(true)){
+        		req->_error.code = Blob::ErrNvs;
+        		strcpy(req->_error.descr, Blob::errList[Blob::ErrNvs]);
+        	}
         	if(req->_error.code != Blob::ErrOK){
         		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_UPD al actualizar code=%d", req->_error.code);
         		char* pub_topic = (char*)Heap::memAlloc(MQ::MQClient::getMaxTopicLen());
@@ -91,7 +95,6 @@ State::StateResult AstCalendar::Init_EventHandler(State::StateEvent* se){
 			//recalculamos horas de orto y ocaso
 			duskDawnCalc();
         	// almacena en el sistema de ficheros
-        	saveConfig(true);
         	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Config actualizada");
 
         	// si est� habilitada la notificaci�n de actualizaci�n, lo notifica

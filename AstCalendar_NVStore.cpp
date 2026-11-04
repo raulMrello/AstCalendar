@@ -411,40 +411,52 @@ void AstCalendar::setDefaultConfig(uint32_t keys){
 
 
 //------------------------------------------------------------------------------------
-void AstCalendar::saveConfig(bool enableResetCount){
+bool AstCalendar::saveConfig(bool enableResetCount){
+	bool ok = true;
 	DEBUG_TRACE_I(_EXPR_, _MODULE_, "Guardando datos en memoria NV...");
 
 	if(!saveParameter("CalMUpdFlag", &_astdata.cfg.updFlags, sizeof(uint32_t),NVSInterface::TypeUint32)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalMUpdFlag!");
 	}
 	if(!saveParameter("CalMEvtFlag", &_astdata.cfg.evtFlags, sizeof(uint32_t),NVSInterface::TypeUint32)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalMEvtFlag!");
 	}
 	if(!saveParameter("CalManVerb", &_astdata.cfg.verbosity, sizeof(uint8_t),NVSInterface::TypeUint8)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalManVerb!");
 	}
 	if(!saveParameter("CalManNvs", &_astdata.cfg.nvs_id, sizeof(uint32_t),NVSInterface::TypeUint32)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalManNvs!");
 	}
 	if(!saveParameter("CalClNumPer", &_astdata.clock.cfg._numPeriods, sizeof(uint8_t),NVSInterface::TypeUint8)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalClNumPer!");
 	}
 	if(!saveParameter("CalClockPer", &_astdata.clock.cfg.periods, sizeof(calendar_period[CalendarClockCfgMaxNumPeriods]),NVSInterface::TypeBlob)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalClockPer!");
 	}
 	if(!saveParameter("CalClockCoo", &_astdata.clock.cfg.geoloc.coords, sizeof(double[2]),NVSInterface::TypeBlob)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalClockCoo!");
 	}
 	if(!saveParameter("CalClockZon", &_astdata.clock.cfg.geoloc.timezone, SizeOfArray(_astdata.clock.cfg.geoloc.timezone),NVSInterface::TypeString)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalClockZon!");
 	}
 	if(!saveParameter("CalClockCod", &_astdata.clock.cfg.geoloc.timezoneCode, sizeof(uint8_t),NVSInterface::TypeUint8)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalClockCod!");
 	}
 	if(!saveParameter("CalClockNum", &_astdata.clock.cfg.geoloc._numPeriods, sizeof(uint8_t),NVSInterface::TypeUint8)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalClockNum!");
 	}
 	if(!saveParameter("CalClockAst", &_astdata.clock.cfg.geoloc.astCorr, sizeof(time_t[CalendarClockCfgMaxNumPeriods][2]),NVSInterface::TypeBlob)){
+		ok = false;
 		DEBUG_TRACE_W(_EXPR_, _MODULE_, "ERR_NVS grabando CalClockAst!");
 	}
 
@@ -453,8 +465,11 @@ void AstCalendar::saveConfig(bool enableResetCount){
 
 	if(enableResetCount){
 		uint8_t en = 1;
-		saveParameter("AppRstEn", &en, sizeof(en), NVSInterface::TypeUint8, true);
+		if(!saveParameter("AppRstEn", &en, sizeof(en), NVSInterface::TypeUint8, true)){
+			ok = false;
+		}
 	}
+	return ok;
 }
 
 
